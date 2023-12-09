@@ -1,23 +1,3 @@
-// Function to fetch and parse JSON data
-// async function fetchData(jsonFilePath) {
-//     try {
-//         // Fetch JSON file
-//         const response = await fetch(jsonFilePath);
-        
-//         // Check if the fetch was successful
-//         if (!response.ok) {
-//             throw new Error('Failed to fetch data');
-//         }
-
-//         // Parse JSON and return the result
-//         return await response.json();
-//     } catch (error) {
-//         console.error('Error fetching/parsing JSON:', error);
-//         // You might want to handle or propagate the error based on your needs
-//         throw error;
-//     }
-// }
-
 function drawLine(x1, y1, x2, y2, stroke, stroke_width, opacity, lineCap='butt', lineJoin='miter') {
     const svgNS = "http://www.w3.org/2000/svg";
     const line = document.createElementNS(svgNS, 'line');
@@ -40,7 +20,7 @@ function drawLine(x1, y1, x2, y2, stroke, stroke_width, opacity, lineCap='butt',
     return line;
 }
 
-function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity) {
+function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity, fill_opacity) {
     const svgNS = "http://www.w3.org/2000/svg";
     const circle = document.createElementNS(svgNS, 'circle');
 
@@ -54,53 +34,23 @@ function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity) {
     circle.setAttribute('stroke', stroke);
     circle.setAttribute('stroke-width', stroke_width);
     circle.setAttribute('opacity', opacity);
+    circle.setAttribute('fill-opacity', fill_opacity);
 
     return circle;
 }
 
-// function drawLinesPoints(visualization) {
-    
-//     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-//     svg.setAttribute("width", "100%");
-//     svg.setAttribute("height", "100%");
-//     visualization.appendChild(svg);
-
-//     const line = document.createElementNS(svg.namespaceURI, 'line');
-//     line.setAttribute('x1', '50');
-//     line.setAttribute('y1', '50');
-//     line.setAttribute('x2', '250');
-//     line.setAttribute('y2', '250');
-//     line.setAttribute('stroke', 'black');
-//     line.setAttribute('stroke-width', '2');
-//     line.setAttribute('opacity', '0.7');
-//     svg.appendChild(line);
-
-//     // Example: Drawing a point
-//     const point = document.createElementNS(svg.namespaceURI, 'circle');
-//     point.setAttribute('cx', '150');
-//     point.setAttribute('cy', '150');
-//     point.setAttribute('r', '5');
-//     point.setAttribute('fill', 'red');
-//     point.setAttribute('opacity', '0.8');
-//     point.addEventListener('mouseover', () => {
-//         // Add code to show more information on mouseover
-//         console.log('Mouseover on Point');
-//     });
-//     svg.appendChild(point);
-// }
-
-// Example usage:
-const jsonFilePath = 'gz.json';
+const jsonFilePath = './static/json/广州.json';
 const visualization = document.getElementById('visualization');
-const raw_width = 1280;
-const raw_height = 720;
-const city_boundary = 300;
-// const city_circle_r = 300;
+const raw_width = 1980;
+const raw_height = 1280;
+const city_boundary = 250;
+const draw_offset = 25;
+const city_circle_r = 145;
 
 function splitPString(s) {
     const numberStrings = s.split(' ');
-    const number1 = parseInt(numberStrings[0], 10) / raw_width * city_boundary;
-    const number2 = parseInt(numberStrings[1], 10) / raw_height * city_boundary;
+    const number1 = draw_offset + Math.max(0, parseInt(numberStrings[0], 10) / raw_width * city_boundary);
+    const number2 = draw_offset + Math.max(0, parseInt(numberStrings[1], 10) / raw_height * city_boundary);
     return [number1, number2];
 }
 
@@ -109,18 +59,26 @@ svg.setAttribute("width", "100%");
 svg.setAttribute("height", "100%");
 visualization.appendChild(svg);
 
-// fetchData(jsonFilePath)
-//     .then(jsonData => {
-        
-//     })
-//     .catch(error => {
-//         // Handle the error
-//         console.error('Error:', error);
-//     });
 
 function parseData(jsonData){
     const city = jsonData.s;
     const city_id = jsonData.i;
+
+    city_circle = drawCircle(150, 150, city_circle_r, '#E9D4C7', '#261E25', '9px', '0.9', '0.3');
+    svg.appendChild(city_circle);
+
+    let max_st_num = 0;
+    let min_st_num = 100;
+    jsonData.l.forEach(line =>{
+        if (max_st_num < line.st.length){
+            max_st_num = line.st.length;
+        }
+        if (min_st_num > line.st.length){
+            min_st_num = line.st.length;
+        }
+    }
+    )
+
     for (const subwayline of jsonData.l) {
         const line_name = subwayline.ln;
         const is_loop = subwayline.lo;
@@ -129,7 +87,7 @@ function parseData(jsonData){
         subwayline.st.forEach(station => {
             if (station.t == "1"){
                 const [w, h] = splitPString(station.p);
-                circle = drawCircle(w, h, 3, 'black', 'black', '1px', '0.0');
+                circle = drawCircle(w, h, 3, '#' + color, 'black', '1px', '0.5', '0.5');
                 svg.appendChild(circle);
             }
         });
@@ -141,7 +99,8 @@ function parseData(jsonData){
             const [x1, y1] = splitPString(first_station.p);
             const last_station = subwayline.st[station_num - 1];
             const [x2, y2] = splitPString(last_station.p);
-            line = drawLine(x1, y1, x2, y2, '#' + color, '3px', '1.0');
+            thickness = 0.25 + (station_num-min_st_num)/(max_st_num-min_st_num) * 2.75;
+            line = drawLine(x1, y1, x2, y2, '#' + color, thickness.toFixed(2) + 'px', '0.7');
             svg.appendChild(line);
         }
     }
