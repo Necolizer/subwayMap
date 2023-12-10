@@ -7212,6 +7212,8 @@ process.umask = function() { return 0; };
 
 },{}],18:[function(require,module,exports){
 function drawLine(x1, y1, x2, y2, stroke, stroke_width, opacity, lineCap='butt', lineJoin='miter') {
+    // This function is used to draw a line
+
     const svgNS = "http://www.w3.org/2000/svg";
     const line = document.createElementNS(svgNS, 'line');
     
@@ -7234,6 +7236,8 @@ function drawLine(x1, y1, x2, y2, stroke, stroke_width, opacity, lineCap='butt',
 }
 
 function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity, fill_opacity) {
+    // This function is used to draw a circle
+
     const svgNS = "http://www.w3.org/2000/svg";
     const circle = document.createElementNS(svgNS, 'circle');
 
@@ -7254,49 +7258,47 @@ function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity, fill_op
 
 const { kmeans } = require('ml-kmeans');
 const k = 6;
-// const jsonFilePath = './static/json/成都.json';
-// const visualization = document.getElementById('visualization1');
-// const caption = document.getElementById('caption1');
-// caption.textContent = '成都';
-const raw_width = 1980;
-const raw_height = 1280;
-const city_boundary = 250;
-const draw_offset = 25;
+const city_boundary = 120;
+const draw_offset = 150; // Half the canvas width, and also height
 const city_circle_r = 142;
+const thickness_offset = 0.25;
+const thickness_weight = 5.75;
 
-// function distort(x, k) {
-//     return Math.tanh(k * (2 * x - 1)) / 2 + 0.5;
-// }
+function splitPString(s, city_center) {
+    // This function is used to convert position strings (e.g. "1000 400") to 
+    // a list of integers indicating [x, y] position on the canvas
+    // @ s: string (e.g. "1000 400")
+    // @ city_center: list of string (e.g. ["6000", "200"])
+    // Return: list of integers
 
-function splitPString(s) {
     const numberStrings = s.split(' ');
-    const number1 = draw_offset + Math.max(0, parseInt(numberStrings[0], 10) / raw_width) * city_boundary;
-    const number2 = draw_offset + Math.max(0, parseInt(numberStrings[1], 10) / raw_height) * city_boundary;
-    return [number1, number2];
+    const city_centor_x = parseInt(city_center[0], 10);
+    const city_centor_y = parseInt(city_center[1], 10);
+    const number0 = draw_offset + (parseInt(numberStrings[0], 10) - city_centor_x) / city_centor_x * city_boundary;
+    const number1 = draw_offset + (parseInt(numberStrings[1], 10) - city_centor_y) / city_centor_y * city_boundary;
+    return [number0, number1];
 }
 
 function calculateRadius(x1, y1, x2, y2) {
+    // This function gets the radius of the circle whose center is the middle point of line [x1, y1] to [x2, y2]
+
     const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
     const radius = distance / 2;
     return radius;
 }
 
-// const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-// svg.setAttribute("width", "100%");
-// svg.setAttribute("height", "100%");
-// visualization.appendChild(svg);
-
-
 function parseData(jsonData, svg){
-    //解析一个城市JSON的数据
+    // This function parses a city JSON file
 
     const city_subway_name = jsonData.s;
     const city_subway_id = jsonData.i;
+    const city_center = jsonData.o.split(',');
 
-    // 最外圈黑圆
-    city_circle = drawCircle(150, 150, city_circle_r, '#E9D4C7', '#261E25', '15px', '0.9', '0.6');
+    // Draw the outside black circle
+    city_circle = drawCircle(draw_offset, draw_offset, city_circle_r, '#E9D4C7', '#261E25', '15px', '0.9', '0.6');
     svg.appendChild(city_circle);
 
+    // Count the max and min number of stations per line in this city
     let max_st_num = 0;
     let min_st_num = 100;
     jsonData.l.forEach(line =>{
@@ -7309,8 +7311,10 @@ function parseData(jsonData, svg){
     }
     )
 
+    // Push all the interchange stations in a list
     const trans_points = [];
 
+    // Iterate all the subway lines
     for (const subwayline of jsonData.l) {
         const line_name = subwayline.ln;
         const is_loop = subwayline.lo;
@@ -7318,39 +7322,42 @@ function parseData(jsonData, svg){
         const station_num = subwayline.st.length;
         // subwayline.st.forEach(station => {
         //     if (station.t == "1"){
-        //         const [w, h] = splitPString(station.p);
+        //         const [w, h] = splitPString(station.p, city_center);
         //         circle = drawCircle(w, h, 3, '#' + color, 'black', '1px', '0.5', '0.5');
         //         svg.appendChild(circle);
         //     }
         // });
         
+        // Push all the interchange stations in a list
         subwayline.st.forEach(station => {
             if (station.t == "1"){
-                const [w, h] = splitPString(station.p);
+                const [w, h] = splitPString(station.p, city_center);
                 trans_points.push([w, h]);
             }
         });
 
+        // Draw a circle or a line based on whether it's a loop
         if (is_loop == '1'){
             const first_station = subwayline.st[0];
-            const [x1, y1] = splitPString(first_station.p);
+            const [x1, y1] = splitPString(first_station.p, city_center);
             const mid_station = subwayline.st[Math.floor(station_num/2)];
-            const [x2, y2] = splitPString(mid_station.p);
-            thickness = 0.25 + (station_num-min_st_num)/(max_st_num-min_st_num) * 4.25;
+            const [x2, y2] = splitPString(mid_station.p, city_center);
+            thickness = thickness_offset + (station_num-min_st_num)/(max_st_num-min_st_num) * thickness_weight;
             circle = drawCircle((x1+x2)/2, (y1+y2)/2, calculateRadius(x1, y1, x2, y2), '#' + color, '#' + color, thickness.toFixed(2) + 'px', '0.7', '0.5');
             svg.appendChild(circle);
         }else
         {
             const first_station = subwayline.st[0];
-            const [x1, y1] = splitPString(first_station.p);
+            const [x1, y1] = splitPString(first_station.p, city_center);
             const last_station = subwayline.st[station_num - 1];
-            const [x2, y2] = splitPString(last_station.p);
-            thickness = 0.25 + (station_num-min_st_num)/(max_st_num-min_st_num) * 5.75;
+            const [x2, y2] = splitPString(last_station.p, city_center);
+            thickness = thickness_offset + (station_num-min_st_num)/(max_st_num-min_st_num) * thickness_weight;
             line = drawLine(x1, y1, x2, y2, '#' + color, thickness.toFixed(2) + 'px', '0.7');
             svg.appendChild(line);
         }
     }
 
+    // K-means clustering for all the interchange stations in this city
     const clustering_res = kmeans(trans_points, k).computeInformation(trans_points);
     clustering_res.forEach(clus => {
         circle = drawCircle(clus.centroid[0], clus.centroid[1], clus.size, 'black', 'black', '1px', '0.5', '0.5');
@@ -7359,6 +7366,8 @@ function parseData(jsonData, svg){
 }
 
 function initializeVCPair(visualizationId, filePaths, captionId, initialCaption) {
+    // This function creates canvas and reads JSON file for a single city with id
+
     const visualization = document.getElementById(visualizationId);
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("width", "100%");
@@ -7381,20 +7390,23 @@ function initializeVCPair(visualizationId, filePaths, captionId, initialCaption)
     caption.textContent = initialCaption;
 }
 
+
+// main function
 const path = require('path');
 const folderPath = './static/json';
 const visualizationContainer = document.getElementById('visualization-container');
 
-const files = ['北京.json', '上海.json', '广州.json', '深圳.json', '成都.json', '东莞.json', 
-'杭州.json', '乌鲁木齐.json', '佛山.json', '兰州.json', '南京.json', '南宁.json', '南昌.json', 
+const files = ['北京.json', '上海.json', '广州.json', '深圳.json', '成都.json', '郑州.json',  
+'重庆.json', '杭州.json', '佛山.json', '兰州.json', '南京.json', '南宁.json', '南昌.json', 
 '厦门.json', '合肥.json', '呼和浩特.json', '哈尔滨.json', '大连.json', '天津.json', '太原.json', 
-'宁波.json', '常州.json', '徐州.json',  '无锡.json', '昆明.json',  
+'宁波.json', '常州.json', '徐州.json',  '无锡.json', '昆明.json', '乌鲁木齐.json',
 '武汉.json', '沈阳.json', '洛阳.json', '济南.json',  '温州.json', '石家庄.json', 
-'福州.json', '苏州.json', '西安.json', '贵阳.json', '郑州.json', '重庆.json', '长春.json', 
+'福州.json', '苏州.json', '西安.json', '贵阳.json',  '长春.json', '东莞.json',
 '长沙.json', '青岛.json', '香港.json']
 
 // const files = ['广州.json', '成都.json']
 
+// Iterate all the cities
 for (let i = 0; i < files.length; i++){
     const city_name = files[i].split('.json')[0]
     const filePaths = path.join(folderPath, files[i]);

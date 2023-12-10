@@ -11,3 +11,10 @@ Read the [step-by-step guide](https://kalyani.com/blog/2010/10/08/subway-map-vis
 cd ./subwayMap
 node_modules\.bin\browserify .\static\js\index.js -o .\static\js\indexBundle.js
 ```
+
+## References
+1. [*Circles in a Circle* (1923) - Wassily Kandinsky](https://www.wassilykandinsky.net/work-247.php)
+2. [globalmetro](https://vis.pku.edu.cn/blog/globalmetro/)
+3. [ml-kmeans](https://github.com/mljs/kmeans)
+4. [高德地图地铁线路](https://map.amap.com/subway/index.html?&1100)
+5. [Json笔记-高德地铁数据分析](https://blog.csdn.net/qq78442761/article/details/122054519)
