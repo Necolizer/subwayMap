@@ -42,16 +42,18 @@ function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity, fill_op
 const { kmeans } = require('ml-kmeans');
 const k = 6;
 const jsonFilePath = './static/json/成都.json';
-const visualization = document.getElementById('visualization');
+const visualization = document.getElementById('visualization1');
+const caption = document.getElementById('caption1');
+caption.textContent = '成都';
 const raw_width = 1980;
 const raw_height = 1280;
 const city_boundary = 250;
 const draw_offset = 25;
 const city_circle_r = 142;
 
-function distort(x, k) {
-    return Math.tanh(k * (2 * x - 1)) / 2 + 0.5;
-}
+// function distort(x, k) {
+//     return Math.tanh(k * (2 * x - 1)) / 2 + 0.5;
+// }
 
 function splitPString(s) {
     const numberStrings = s.split(' ');
@@ -73,9 +75,12 @@ visualization.appendChild(svg);
 
 
 function parseData(jsonData){
+    ```解析一个城市JSON的数据```
+
     const city = jsonData.s;
     const city_id = jsonData.i;
 
+    // 最外圈黑圆
     city_circle = drawCircle(150, 150, city_circle_r, '#E9D4C7', '#261E25', '15px', '0.9', '0.6');
     svg.appendChild(city_circle);
 
@@ -131,14 +136,13 @@ function parseData(jsonData){
             line = drawLine(x1, y1, x2, y2, '#' + color, thickness.toFixed(2) + 'px', '0.7');
             svg.appendChild(line);
         }
-
-        
-        const clustering_res = kmeans(trans_points, k).computeInformation(trans_points);
-        clustering_res.forEach(clus => {
-            circle = drawCircle(clus.centroid[0], clus.centroid[1], clus.size, 'black', 'black', '1px', '0.5', '0.5');
-            svg.appendChild(circle);
-        });
     }
+
+    const clustering_res = kmeans(trans_points, k).computeInformation(trans_points);
+    clustering_res.forEach(clus => {
+        circle = drawCircle(clus.centroid[0], clus.centroid[1], clus.size, 'black', 'black', '1px', '0.5', '0.5');
+        svg.appendChild(circle);
+    });
 }
 
 
