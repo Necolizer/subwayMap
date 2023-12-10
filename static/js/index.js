@@ -41,10 +41,10 @@ function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity, fill_op
 
 const { kmeans } = require('ml-kmeans');
 const k = 6;
-const jsonFilePath = './static/json/成都.json';
-const visualization = document.getElementById('visualization1');
-const caption = document.getElementById('caption1');
-caption.textContent = '成都';
+// const jsonFilePath = './static/json/成都.json';
+// const visualization = document.getElementById('visualization1');
+// const caption = document.getElementById('caption1');
+// caption.textContent = '成都';
 const raw_width = 1980;
 const raw_height = 1280;
 const city_boundary = 250;
@@ -68,17 +68,17 @@ function calculateRadius(x1, y1, x2, y2) {
     return radius;
 }
 
-const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-svg.setAttribute("width", "100%");
-svg.setAttribute("height", "100%");
-visualization.appendChild(svg);
+// const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+// svg.setAttribute("width", "100%");
+// svg.setAttribute("height", "100%");
+// visualization.appendChild(svg);
 
 
-function parseData(jsonData){
-    ```解析一个城市JSON的数据```
+function parseData(jsonData, svg){
+    //解析一个城市JSON的数据
 
-    const city = jsonData.s;
-    const city_id = jsonData.i;
+    const city_subway_name = jsonData.s;
+    const city_subway_id = jsonData.i;
 
     // 最外圈黑圆
     city_circle = drawCircle(150, 150, city_circle_r, '#E9D4C7', '#261E25', '15px', '0.9', '0.6');
@@ -145,15 +145,62 @@ function parseData(jsonData){
     });
 }
 
+function initializeVCPair(visualizationId, filePaths, captionId, initialCaption) {
+    const visualization = document.getElementById(visualizationId);
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "100%");
+    svg.setAttribute("height", "100%");
+    visualization.appendChild(svg);
 
-$.ajax({
-    url: jsonFilePath,
-    type: "GET",
-    dataType: "json",
-    success: 
-    function (data) {
-        parseData(data)
-    }
-});
+    // Add your drawing logic here...
+    $.ajax({
+        url: filePaths,
+        type: "GET",
+        dataType: "json",
+        success: 
+        function (data) {
+            parseData(data, svg)
+        }
+    });
+
+    // Set the initial caption text
+    const caption = document.getElementById(captionId);
+    caption.textContent = initialCaption;
+}
+
+const path = require('path');
+const folderPath = './static/json';
+const visualizationContainer = document.getElementById('visualization-container');
+
+const files = ['北京.json', '上海.json', '广州.json', '深圳.json', '成都.json', '东莞.json', 
+'杭州.json', '乌鲁木齐.json', '佛山.json', '兰州.json', '南京.json', '南宁.json', '南昌.json', 
+'厦门.json', '合肥.json', '呼和浩特.json', '哈尔滨.json', '大连.json', '天津.json', '太原.json', 
+'宁波.json', '常州.json', '徐州.json',  '无锡.json', '昆明.json',  
+'武汉.json', '沈阳.json', '洛阳.json', '济南.json',  '温州.json', '石家庄.json', 
+'福州.json', '苏州.json', '西安.json', '贵阳.json', '郑州.json', '重庆.json', '长春.json', 
+'长沙.json', '青岛.json', '香港.json']
+
+// const files = ['广州.json', '成都.json']
+
+for (let i = 0; i < files.length; i++){
+    const city_name = files[i].split('.json')[0]
+    const filePaths = path.join(folderPath, files[i]);
+    const v_c_pair = document.createElement('div');
+    v_c_pair.classList.add('v-c-pair-container');
+
+    const visualizationId = `visualization${i}`;
+    const captionId = `caption${i}`;
+    const initialCaption = city_name;
+
+    v_c_pair.innerHTML = `
+        <div class="visualization" id="${visualizationId}"></div>
+        <div class="caption zhimangxing" id="${captionId}">${initialCaption}</div>
+    `;
+
+    visualizationContainer.appendChild(v_c_pair);
+
+    initializeVCPair(visualizationId, filePaths, captionId, initialCaption);
+}
+
 
 
