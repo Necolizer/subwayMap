@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "ml-kmeans": "^6.0.0"
+  }
+}

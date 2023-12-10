@@ -39,6 +39,8 @@ function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity, fill_op
     return circle;
 }
 
+const { kmeans } = require('ml-kmeans');
+const k = 6;
 const jsonFilePath = './static/json/成都.json';
 const visualization = document.getElementById('visualization');
 const raw_width = 1980;
@@ -89,18 +91,28 @@ function parseData(jsonData){
     }
     )
 
+    const trans_points = [];
+
     for (const subwayline of jsonData.l) {
         const line_name = subwayline.ln;
         const is_loop = subwayline.lo;
         const color = subwayline.cl;
         const station_num = subwayline.st.length;
+        // subwayline.st.forEach(station => {
+        //     if (station.t == "1"){
+        //         const [w, h] = splitPString(station.p);
+        //         circle = drawCircle(w, h, 3, '#' + color, 'black', '1px', '0.5', '0.5');
+        //         svg.appendChild(circle);
+        //     }
+        // });
+        
         subwayline.st.forEach(station => {
             if (station.t == "1"){
                 const [w, h] = splitPString(station.p);
-                circle = drawCircle(w, h, 3, '#' + color, 'black', '1px', '0.5', '0.5');
-                svg.appendChild(circle);
+                trans_points.push([w, h]);
             }
         });
+
         if (is_loop == '1'){
             const first_station = subwayline.st[0];
             const [x1, y1] = splitPString(first_station.p);
@@ -115,10 +127,17 @@ function parseData(jsonData){
             const [x1, y1] = splitPString(first_station.p);
             const last_station = subwayline.st[station_num - 1];
             const [x2, y2] = splitPString(last_station.p);
-            thickness = 0.25 + (station_num-min_st_num)/(max_st_num-min_st_num) * 4.25;
+            thickness = 0.25 + (station_num-min_st_num)/(max_st_num-min_st_num) * 5.75;
             line = drawLine(x1, y1, x2, y2, '#' + color, thickness.toFixed(2) + 'px', '0.7');
             svg.appendChild(line);
         }
+
+        
+        const clustering_res = kmeans(trans_points, k).computeInformation(trans_points);
+        clustering_res.forEach(clus => {
+            circle = drawCircle(clus.centroid[0], clus.centroid[1], clus.size, 'black', 'black', '1px', '0.5', '0.5');
+            svg.appendChild(circle);
+        });
     }
 }
 
