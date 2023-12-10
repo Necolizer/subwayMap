@@ -1,6 +1,20 @@
 #visualization {
     position: relative;
-    width: 100%;
+    width: 300px;
     height: 300px;
     border: 1px solid #ccc;
+}
+
+.g-container {
+    position: relative;
+    width: 400px;
+    height: 300px;
+    overflow: hidden;
+    transition: clip-path .3s linear;
+    clip-path: circle(20px at 44px 44px);
+    background: #fff;
+    
+    &:hover {
+        clip-path: circle(460px at 44px 44px);
+    }
 }
