@@ -200,6 +200,7 @@ function parseData(jsonData, svg, subcaptionId){
             const [x2, y2] = splitPString(last_station.p, city_center);
             thickness = thickness_offset + (station_num-min_st_num)/(max_st_num-min_st_num) * thickness_weight;
             line = drawLine(x1, y1, x2, y2, '#' + color, thickness.toFixed(2) + 'px', '0.75');
+            
             svg.appendChild(line);
             // subway_lines_and_circles.push(line);
         }
