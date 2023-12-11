@@ -7262,11 +7262,13 @@ function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity, fill_op
 
 const { kmeans } = require('ml-kmeans');
 const k = 6;
-const city_boundary = 120;
-const draw_offset = 150; // Half the canvas width, and also height
-const city_circle_r = 142;
-const thickness_offset = 0.25;
-const thickness_weight = 5.75;
+const city_boundary = 80; //120;
+const draw_offset = 100; //150; // Half the canvas width, and also height
+const city_circle_r = 95; //142;
+const city_circle_thickness = 10; //15;
+const thickness_offset = 0.16; //0.25;
+const thickness_weight = 3.8; //5.75;
+const interchange_st_circle_r_weight = 0.67; //1.0;
 
 function splitPString(s, city_center) {
     // This function is used to convert position strings (e.g. "1000 400") to 
@@ -7303,7 +7305,7 @@ function parseData(jsonData, svg, subcaptionId){
     subcaption.innerHTML = `${subcaption_text}`;
 
     // Draw the outside black circle
-    city_circle = drawCircle(draw_offset, draw_offset, city_circle_r, '#E9D4C7', '#261E25', '15px', '0.9', '0.6');
+    city_circle = drawCircle(draw_offset, draw_offset, city_circle_r, '#E9D4C7', '#261E25', city_circle_thickness.toFixed(2) + 'px', '0.9', '0.6');
     svg.appendChild(city_circle);
 
     // Count the max and min number of stations per line in this city
@@ -7368,12 +7370,14 @@ function parseData(jsonData, svg, subcaptionId){
         }
     }
 
-    // K-means clustering for all the interchange stations in this city
-    const clustering_res = kmeans(trans_points, k).computeInformation(trans_points);
-    clustering_res.forEach(clus => {
-        circle = drawCircle(clus.centroid[0], clus.centroid[1], clus.size, 'black', 'black', '1px', '0.4', '0.4', false);
-        svg.appendChild(circle);
-    });
+    if (trans_points.length >= k){
+        // K-means clustering for all the interchange stations in this city
+        const clustering_res = kmeans(trans_points, k).computeInformation(trans_points);
+        clustering_res.forEach(clus => {
+            circle = drawCircle(clus.centroid[0], clus.centroid[1], clus.size * interchange_st_circle_r_weight, 'black', 'black', '1px', '0.4', '0.4', false);
+            svg.appendChild(circle);
+        });
+    }
 
     // subway_lines_and_circles.forEach(lc =>{
     //     svg.appendChild(lc);

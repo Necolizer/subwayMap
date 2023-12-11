@@ -1,0 +1,56 @@
+/* Click Event */
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    /* animation: blur-in 0.5s 0ms forwards; */
+}
+
+/* Let's define an animation: */
+@keyframes blur-in {
+    from {
+        backdrop-filter: blur(0px);
+    }
+    to {
+        backdrop-filter: blur(12px);
+    }
+}
+
+@keyframes blur-out {
+    from {
+        backdrop-filter: blur(12px);
+    }
+    to {
+        backdrop-filter: blur(0px);
+    }
+}
+
+.blur-in {
+    animation: blur-in 0.5s 0ms forwards;
+}
+
+.blur-out {
+    animation: blur-out 0.5s 0ms forwards;
+}
+
+.modal {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.svg-foreground {
+    display: none;
+    position: fixed;
+    top: 10%;
+    left: 5%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}

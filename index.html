@@ -7,17 +7,34 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zhi+Mang+Xing&display=swap" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" />
     <link rel="stylesheet" href="./static/css/index.css">
+    <link rel="stylesheet" href="./static/css/event.css">
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 </head>
 
 <body>
 
-<h1 class="page-caption">
+
+<!-- 前景 SVG -->
+<svg id="foreground-svg" class="svg-foreground" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="64" height="64">
+    <path d="m16.707,8.707l-3.293,3.293,3.293,3.293-1.414,1.414-3.293-3.293-3.293,3.293-1.414-1.414,3.293-3.293-3.293-3.293,1.414-1.414,3.293,3.293,3.293-3.293,1.414,1.414Zm7.293,3.293c0,6.617-5.383,12-12,12S0,18.617,0,12,5.383,0,12,0s12,5.383,12,12Zm-2,0c0-5.514-4.486-10-10-10S2,6.486,2,12s4.486,10,10,10,10-4.486,10-10Z"/>
+</svg>
+
+<h1 class="page-caption" id="page-caption">
     中国城市地铁系统可视化
 </h1>
 
 <div class="visualization-container" id="visualization-container"></div>
 <script src="./static/js/indexBundle.js"></script>
+
+
+<!-- 弹出的页面 -->
+<div class="overlay" id="overlay">
+    <!-- <div class="modal" id="modal">
+        <p>这是一个弹出的页面</p>
+    </div> -->
+</div>
+
+<script src="./static/js/event.js"></script>
 
 <footer class="footer">
     <p>&copy; 2023 SYSU ISE Big Data & Visualization</p>
