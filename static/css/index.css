@@ -6,7 +6,7 @@
 
 .visualization-container>* {
     flex: 0 0 20%;
-  }
+}
 
 .v-c-pair-container {
     display: flex;
@@ -25,16 +25,19 @@
     /* border: 1px solid #ccc; */
 }
 
-/* .text-container {
-    display: flex;
-} */
-
-.caption {
+.text-container {
     text-align: center;
     margin-top: 10px;
-    font-size: 15px;
     margin-left: auto;
     margin-right: auto;
+}
+
+.caption {
+    /* text-align: center;
+    margin-top: 10px; */
+    font-size: 15px;
+    /* margin-left: auto;
+    margin-right: auto; */
     font-family: 'Noto Sans SC', sans-serif; /* Use Noto Sans Simplified Chinese */
     font-weight: 400; /* Choose the appropriate weight */
     
@@ -44,6 +47,23 @@
     font-size: 35px;
     font-family: 'Zhi Mang Xing', cursive; /* Use Zhi Mang Xing */
     font-weight: 400; /* Choose the appropriate weight */
+}
+
+.page-caption {
+    text-align: center;
+    font-size: 35px;
+    margin-left: auto;
+    margin-right: auto;
+    font-family: 'Noto Sans SC', sans-serif; /* Use Noto Sans Simplified Chinese */
+    font-weight: 700; /* Choose the appropriate weight */
+    
+}
+
+.footer{
+    text-align: center;
+    font-family: 'Noto Sans SC', sans-serif;
+    background-color:#fafafa;
+    padding:1rem 1.5rem 1.2rem
 }
 
 .g-container {

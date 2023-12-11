@@ -22,7 +22,7 @@ function drawLine(x1, y1, x2, y2, stroke, stroke_width, opacity, lineCap='butt',
     return line;
 }
 
-function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity, fill_opacity) {
+function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity, fill_opacity, pointerEvents=true) {
     // This function is used to draw a circle
 
     const svgNS = "http://www.w3.org/2000/svg";
@@ -39,6 +39,10 @@ function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity, fill_op
     circle.setAttribute('stroke-width', stroke_width);
     circle.setAttribute('opacity', opacity);
     circle.setAttribute('fill-opacity', fill_opacity);
+
+    if (!pointerEvents){
+        circle.style.pointerEvents = "none";
+    }
 
     return circle;
 }
@@ -74,12 +78,16 @@ function calculateRadius(x1, y1, x2, y2) {
     return radius;
 }
 
-function parseData(jsonData, svg){
+function parseData(jsonData, svg, subcaptionId){
     // This function parses a city JSON file
 
     const city_subway_name = jsonData.s;
     const city_subway_id = jsonData.i;
     const city_center = jsonData.o.split(',');
+
+    const subcaption_text = "|" + city_subway_name + "[" + city_subway_id + "]";
+    const subcaption = document.getElementById(subcaptionId);
+    subcaption.innerHTML = `${subcaption_text}`;
 
     // Draw the outside black circle
     city_circle = drawCircle(draw_offset, draw_offset, city_circle_r, '#E9D4C7', '#261E25', '15px', '0.9', '0.6');
@@ -100,6 +108,7 @@ function parseData(jsonData, svg){
 
     // Push all the interchange stations in a list
     const trans_points = [];
+    // const subway_lines_and_circles = [];
 
     // Iterate all the subway lines
     for (const subwayline of jsonData.l) {
@@ -110,7 +119,7 @@ function parseData(jsonData, svg){
         // subwayline.st.forEach(station => {
         //     if (station.t == "1"){
         //         const [w, h] = splitPString(station.p, city_center);
-        //         circle = drawCircle(w, h, 3, '#' + color, 'black', '1px', '0.5', '0.5');
+        //         circle = drawCircle(w, h, 3, '#' + color, 'black', '1px', '0.5', '0.5', false);
         //         svg.appendChild(circle);
         //     }
         // });
@@ -130,8 +139,9 @@ function parseData(jsonData, svg){
             const mid_station = subwayline.st[Math.floor(station_num/2)];
             const [x2, y2] = splitPString(mid_station.p, city_center);
             thickness = thickness_offset + (station_num-min_st_num)/(max_st_num-min_st_num) * thickness_weight;
-            circle = drawCircle((x1+x2)/2, (y1+y2)/2, calculateRadius(x1, y1, x2, y2), '#' + color, '#' + color, thickness.toFixed(2) + 'px', '0.7', '0.5');
+            circle = drawCircle((x1+x2)/2, (y1+y2)/2, calculateRadius(x1, y1, x2, y2), '#' + color, '#' + color, thickness.toFixed(2) + 'px', '0.75', '0.5');
             svg.appendChild(circle);
+            // subway_lines_and_circles.push(circle);
         }else
         {
             const first_station = subwayline.st[0];
@@ -139,20 +149,25 @@ function parseData(jsonData, svg){
             const last_station = subwayline.st[station_num - 1];
             const [x2, y2] = splitPString(last_station.p, city_center);
             thickness = thickness_offset + (station_num-min_st_num)/(max_st_num-min_st_num) * thickness_weight;
-            line = drawLine(x1, y1, x2, y2, '#' + color, thickness.toFixed(2) + 'px', '0.7');
+            line = drawLine(x1, y1, x2, y2, '#' + color, thickness.toFixed(2) + 'px', '0.75');
             svg.appendChild(line);
+            // subway_lines_and_circles.push(line);
         }
     }
 
     // K-means clustering for all the interchange stations in this city
     const clustering_res = kmeans(trans_points, k).computeInformation(trans_points);
     clustering_res.forEach(clus => {
-        circle = drawCircle(clus.centroid[0], clus.centroid[1], clus.size, 'black', 'black', '1px', '0.5', '0.5');
+        circle = drawCircle(clus.centroid[0], clus.centroid[1], clus.size, 'black', 'black', '1px', '0.4', '0.4', false);
         svg.appendChild(circle);
     });
+
+    // subway_lines_and_circles.forEach(lc =>{
+    //     svg.appendChild(lc);
+    // });
 }
 
-function initializeVCPair(visualizationId, filePaths, captionId, initialCaption) {
+function initializeVCPair(visualizationId, filePaths, captionId, initialCaption, subcaptionId) {
     // This function creates canvas and reads JSON file for a single city with id
 
     const visualization = document.getElementById(visualizationId);
@@ -168,7 +183,7 @@ function initializeVCPair(visualizationId, filePaths, captionId, initialCaption)
         dataType: "json",
         success: 
         function (data) {
-            parseData(data, svg)
+            parseData(data, svg, subcaptionId)
         }
     });
 
@@ -203,15 +218,19 @@ for (let i = 0; i < files.length; i++){
     const visualizationId = `visualization${i}`;
     const captionId = `caption${i}`;
     const initialCaption = city_name;
+    const subcaptionId = `subcaption${i}`;
 
     v_c_pair.innerHTML = `
         <div class="visualization" id="${visualizationId}"></div>
-        <div class="caption zhimangxing" id="${captionId}">${initialCaption}</div>
+        <div class="text-container">
+            <span class="caption zhimangxing" id="${captionId}">${initialCaption}</span>
+            <span class="caption" id="${subcaptionId}"></span>
+        </div>
     `;
 
     visualizationContainer.appendChild(v_c_pair);
 
-    initializeVCPair(visualizationId, filePaths, captionId, initialCaption);
+    initializeVCPair(visualizationId, filePaths, captionId, initialCaption, subcaptionId);
 }
 
 
