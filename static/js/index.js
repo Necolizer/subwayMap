@@ -19,6 +19,54 @@ function drawLine(x1, y1, x2, y2, stroke, stroke_width, opacity, lineCap='butt',
     line.setAttribute('stroke-linecap', lineCap); // Options: butt, round, square
     line.setAttribute('stroke-linejoin', lineJoin); // Options: miter, round, bevel
     
+    // 鼠标悬停、显示信息
+    const midX = (x1 + x2) / 2;
+    const midY = (y1 + y2) / 2;
+
+    // Additional code to handle mouseover event
+    line.addEventListener('mouseover', function(event) {
+        // Create a text element for displaying information
+        const text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+        text.setAttribute('x', midX);
+        text.setAttribute('y', midY);
+        text.setAttribute('fill', 'black');
+        text.setAttribute('font-size', '12');
+        
+        // Information about the line's starting and ending points
+        const startingPoint = `Start: (${x1}, ${y1})`;
+        const endingPoint = `End: (${x2}, ${y2})`;
+
+        // Create two tspan elements for start and end points
+        const startTspan = document.createElementNS("http://www.w3.org/2000/svg", 'tspan');
+        startTspan.textContent = startingPoint;
+        startTspan.setAttribute('x', midX);
+        startTspan.setAttribute('dy', '1.2em');
+
+        const endTspan = document.createElementNS("http://www.w3.org/2000/svg", 'tspan');
+        endTspan.textContent = endingPoint;
+        endTspan.setAttribute('x', midX);
+        endTspan.setAttribute('dy', '1.2em');
+
+        // Append tspans to text element
+        text.appendChild(startTspan);
+        text.appendChild(endTspan);
+
+        // Append text element to the SVG
+        svg.appendChild(text);
+
+        // Save the text element reference to remove it on mouseout
+        line.hoverText = text;
+    });
+
+    // Additional code to handle mouseout event
+    line.addEventListener('mouseout', function(event) {
+        // Remove the displayed information when mouse moves away from the line
+        if (line.hoverText) {
+            svg.removeChild(line.hoverText);
+            line.hoverText = null;
+        }
+    });
+
     return line;
 }
 
