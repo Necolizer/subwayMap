@@ -7211,7 +7211,7 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],18:[function(require,module,exports){
-function drawLine(x1, y1, x2, y2, stroke, stroke_width, opacity, svg, lineCap='butt', lineJoin='miter') {
+function drawLine(x1, y1, x2, y2, stroke, stroke_width, opacity, svg, lineCap='butt', lineJoin='miter', lineInfo= '线路名称： 起始站： 终点站： 站点数：') {
     // This function is used to draw a line
 
     const svgNS = "http://www.w3.org/2000/svg";
@@ -7263,29 +7263,21 @@ function drawLine(x1, y1, x2, y2, stroke, stroke_width, opacity, svg, lineCap='b
 
         // Create a text element for displaying information
         const text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
-        text.setAttribute('x', midX);
-        text.setAttribute('y', midY);
-        text.setAttribute('fill', 'black');
-        text.setAttribute('font-size', '12');
+        const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+        const textX = (x1 + x2) / 2 + parseFloat(stroke_width) + Math.sin(angle) * 5;
+        const textY = (y1 + y2) / 2 + parseFloat(stroke_width) + Math.cos(angle) * 5;
         
-        // Information about the line's starting and ending points
-        const startingPoint = `Start: (${x1}, ${y1})`;
-        const endingPoint = `End: (${x2}, ${y2})`;
+        // Set text attributes
+        text.setAttribute('x', textX);
+        text.setAttribute('y', textY);
+        text.setAttribute('fill', stroke); // Use line color for text
+        text.setAttribute('font-size', (4 * 2).toFixed(2)); // Font size proportional to line width
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('dominant-baseline', 'middle');
+        text.setAttribute('transform', `rotate(${angle},${textX},${textY})`);
 
-        // Create two tspan elements for start and end points
-        const startTspan = document.createElementNS("http://www.w3.org/2000/svg", 'tspan');
-        startTspan.textContent = startingPoint;
-        startTspan.setAttribute('x', midX);
-        startTspan.setAttribute('dy', '1.2em');
-
-        const endTspan = document.createElementNS("http://www.w3.org/2000/svg", 'tspan');
-        endTspan.textContent = endingPoint;
-        endTspan.setAttribute('x', midX);
-        endTspan.setAttribute('dy', '1.2em');
-
-        // Append tspans to text element
-        text.appendChild(startTspan);
-        text.appendChild(endTspan);
+        // Set text content using lineInfo parameter
+        text.textContent = lineInfo;
 
         // Append text element to the SVG
         svg.appendChild(text);
