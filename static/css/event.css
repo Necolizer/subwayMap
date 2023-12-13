@@ -20,14 +20,14 @@
     }
     to {
         backdrop-filter: blur(8px);
-        background: rgba(255, 255, 255, 0.6);
+        background: rgba(255, 255, 255, 0.75);
     }
 }
 
 @keyframes blur-out {
     from {
         backdrop-filter: blur(8px);
-        background: rgba(255, 255, 255, 0.6);
+        background: rgba(255, 255, 255, 0.75);
     }
     to {
         backdrop-filter: blur(0px);
@@ -43,12 +43,16 @@
     animation: blur-out 0.5s 0ms forwards;
 }
 
-.modal {
-    background: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
+.scaled-city {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
+
+/* .scaled * {
+    transform: scale(1.5); 
+} */
 
 .svg-foreground {
     display: none;
@@ -57,4 +61,9 @@
     left: 5%;
     transform: translate(-50%, -50%);
     z-index: 1;
+    transition: opacity 0.15s ease;
+}
+
+.svg-foreground:hover {
+    opacity: 0.3;
 }

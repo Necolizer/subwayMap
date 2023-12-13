@@ -12,6 +12,12 @@
 .v-c-pair-container {
     display: flex;
     flex-direction: column;
+    margin-bottom: 0px;
+    width: 600px;
+    height: 650px;
+}
+
+.v-c-pair-container.small {
     margin-bottom: 10px;
     width: 200px;
     height: 235px;
@@ -19,16 +25,25 @@
 
 .visualization {
     position: relative;
-    /* margin-right: 10px; */
+    width: 600px;
+    height: 600px;
+}
+
+.visualization.shadow {
+    position: relative;
     width: 200px;
-    /* width: calc(16.66% - 10px); */
     height: 200px;
-    /* border: 1px solid #ccc; */
+    transition: box-shadow 0.3s ease;
+}
+
+.visualization.shadow:hover {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
 .text-container {
     text-align: center;
     margin-top: 5px;
+    margin-bottom: 10px;
     /* margin-left: auto;
     margin-right: auto; */
 }
@@ -44,8 +59,18 @@
     
 }
 
+.caption.large {
+    font-size: 18px;
+}
+
 .caption.zhimangxing {
     font-size: 25px;
+    font-family: 'Zhi Mang Xing', cursive; /* Use Zhi Mang Xing */
+    font-weight: 400; /* Choose the appropriate weight */
+}
+
+.caption.zhimangxinglarge {
+    font-size: 32px;
     font-family: 'Zhi Mang Xing', cursive; /* Use Zhi Mang Xing */
     font-weight: 400; /* Choose the appropriate weight */
 }

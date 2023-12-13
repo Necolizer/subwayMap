@@ -7211,7 +7211,40 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],18:[function(require,module,exports){
-function setMouseOverText(svg, line, lineInfo= '线路名称： 起始站： 终点站： 站点数：') {
+const path = require('path');
+const { kmeans } = require('ml-kmeans');
+
+class Args {
+    constructor(kmeans_k, opacity_multiply_factor, city_boundary, draw_offset, city_circle_r, city_circle_thickness,
+        thickness_offset, thickness_weight, interchange_st_circle_r_weight) {
+        
+        //不可以scale的值
+        this.kmeans_k = kmeans_k || 6;
+        this.opacity_multiply_factor = opacity_multiply_factor || 0.25,
+
+        // 可以scale的值
+        this.city_boundary = city_boundary || 80; //120;
+        this.draw_offset = draw_offset || 100; //150; // Half the canvas width, and also height
+        this.city_circle_r = city_circle_r || 95; //142;
+        this.city_circle_thickness = city_circle_thickness || 10; //15;
+        this.thickness_offset = thickness_offset || 0.16; //0.25;
+        this.thickness_weight = thickness_weight || 3.8; //5.75;
+        this.interchange_st_circle_r_weight = interchange_st_circle_r_weight || 0.67; //1.0;
+    }
+
+    scale(factor) {
+        this.city_boundary *= factor;
+        this.draw_offset *= factor;
+        this.city_circle_r *= factor;
+        this.city_circle_thickness *= factor;
+        this.thickness_offset *= factor;
+        this.thickness_weight *= factor;
+        this.interchange_st_circle_r_weight *= factor;
+    }
+}
+
+function setMouseOverText(svg, line, opacity_multiply_factor, lineInfo= '线路名称： 起始站： 终点站： 站点数：') {
+    // 设置线悬停时的效果和文字
     const x1 = parseFloat(line.getAttribute('x1'));
     const y1 = parseFloat(line.getAttribute('y1'));
     const x2 = parseFloat(line.getAttribute('x2'));
@@ -7219,8 +7252,6 @@ function setMouseOverText(svg, line, lineInfo= '线路名称： 起始站： 终
     const stroke_width = line.getAttribute('stroke-width');
     const stroke = line.getAttribute('stroke');
     const opacity = line.getAttribute('opacity');
-
-    const opacity_multiply_factor = 0.5;
 
     // Additional code to handle mouseover event
     line.addEventListener('mouseover', function(event) {
@@ -7342,17 +7373,7 @@ function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity, fill_op
     return circle;
 }
 
-const { kmeans } = require('ml-kmeans');
-const k = 6;
-const city_boundary = 80; //120;
-const draw_offset = 100; //150; // Half the canvas width, and also height
-const city_circle_r = 95; //142;
-const city_circle_thickness = 10; //15;
-const thickness_offset = 0.16; //0.25;
-const thickness_weight = 3.8; //5.75;
-const interchange_st_circle_r_weight = 0.67; //1.0;
-
-function splitPString(s, city_center) {
+function splitPString(s, city_center, draw_offset, city_boundary) {
     // This function is used to convert position strings (e.g. "1000 400") to 
     // a list of integers indicating [x, y] position on the canvas
     // @ s: string (e.g. "1000 400")
@@ -7375,7 +7396,7 @@ function calculateRadius(x1, y1, x2, y2) {
     return radius;
 }
 
-function parseData(jsonData, svg, subcaptionId){
+function parseData(jsonData, svg, subcaptionId, args){
     // This function parses a city JSON file
 
     const city_subway_name = jsonData.s;
@@ -7387,7 +7408,7 @@ function parseData(jsonData, svg, subcaptionId){
     subcaption.innerHTML = `${subcaption_text}`;
 
     // Draw the outside black circle
-    city_circle = drawCircle(draw_offset, draw_offset, city_circle_r, '#E9D4C7', '#261E25', city_circle_thickness.toFixed(2) + 'px', '0.9', '0.6');
+    city_circle = drawCircle(args.draw_offset, args.draw_offset, args.city_circle_r, '#E9D4C7', '#261E25', args.city_circle_thickness.toFixed(2) + 'px', '0.9', '0.6');
     svg.appendChild(city_circle);
 
     // Count the max and min number of stations per line in this city
@@ -7415,7 +7436,7 @@ function parseData(jsonData, svg, subcaptionId){
         const station_num = subwayline.st.length;
         // subwayline.st.forEach(station => {
         //     if (station.t == "1"){
-        //         const [w, h] = splitPString(station.p, city_center);
+        //         const [w, h] = splitPString(station.p, city_center, args.draw_offset, args.city_boundary);
         //         circle = drawCircle(w, h, 3, '#' + color, 'black', '1px', '0.5', '0.5', false);
         //         svg.appendChild(circle);
         //     }
@@ -7424,7 +7445,7 @@ function parseData(jsonData, svg, subcaptionId){
         // Push all the interchange stations in a list
         subwayline.st.forEach(station => {
             if (station.t == "1"){
-                const [w, h] = splitPString(station.p, city_center);
+                const [w, h] = splitPString(station.p, city_center, args.draw_offset, args.city_boundary);
                 trans_points.push([w, h]);
             }
         });
@@ -7432,44 +7453,50 @@ function parseData(jsonData, svg, subcaptionId){
         // Draw a circle or a line based on whether it's a loop
         if (is_loop == '1'){
             const first_station = subwayline.st[0];
-            const [x1, y1] = splitPString(first_station.p, city_center);
+            const [x1, y1] = splitPString(first_station.p, city_center, args.draw_offset, args.city_boundary);
             const mid_station = subwayline.st[Math.floor(station_num/2)];
-            const [x2, y2] = splitPString(mid_station.p, city_center);
+            const [x2, y2] = splitPString(mid_station.p, city_center, args.draw_offset, args.city_boundary);
             let thickness;
             if (max_st_num !== min_st_num) {
-                thickness = thickness_offset + (station_num - min_st_num) / (max_st_num - min_st_num) * thickness_weight;
+                thickness = args.thickness_offset + (station_num - min_st_num) / (max_st_num - min_st_num) * args.thickness_weight;
             } else {
                 // Handle the case when max_st_num is equal to min_st_num
-                thickness = thickness_offset + 0.5 * thickness_weight;
+                thickness = args.thickness_offset + 0.5 * args.thickness_weight;
             }
-            circle = drawCircle((x1+x2)/2, (y1+y2)/2, calculateRadius(x1, y1, x2, y2), '#' + color, '#' + color, thickness.toFixed(2) + 'px', '0.75', '0.5');
-            svg.appendChild(circle);
+            circle_intro = drawCircle((x1+x2)/2, (y1+y2)/2, (calculateRadius(x1, y1, x2, y2) - thickness/2), '#' + color, 'none', '0', '1', '0.5', false);
+            svg.appendChild(circle_intro);
+            circle_extro = drawCircle((x1+x2)/2, (y1+y2)/2, calculateRadius(x1, y1, x2, y2), 'none', '#' + color, thickness.toFixed(2) + 'px', '0.75', '0');
+            svg.appendChild(circle_extro);
             // subway_lines_and_circles.push(circle);
         }else
         {
             const first_station = subwayline.st[0];
-            const [x1, y1] = splitPString(first_station.p, city_center);
+            const [x1, y1] = splitPString(first_station.p, city_center, args.draw_offset, args.city_boundary);
             const last_station = subwayline.st[station_num - 1];
-            const [x2, y2] = splitPString(last_station.p, city_center);
+            const [x2, y2] = splitPString(last_station.p, city_center, args.draw_offset, args.city_boundary);
             let thickness;
             if (max_st_num !== min_st_num) {
-                thickness = thickness_offset + (station_num - min_st_num) / (max_st_num - min_st_num) * thickness_weight;
+                thickness = args.thickness_offset + (station_num - min_st_num) / (max_st_num - min_st_num) * args.thickness_weight;
             } else {
                 // Handle the case when max_st_num is equal to min_st_num
-                thickness = thickness_offset + 0.5 * thickness_weight;
+                thickness = args.thickness_offset + 0.5 * args.thickness_weight;
             }
             line = drawLine(x1, y1, x2, y2, '#' + color, thickness.toFixed(2) + 'px', '0.75');
             svg.appendChild(line);
-            setMouseOverText(svg, line);
+            setMouseOverText(svg, line, args.opacity_multiply_factor);
             // subway_lines_and_circles.push(line);
         }
     }
 
-    if (trans_points.length >= k){
+    if (trans_points.length >= args.kmeans_k){
         // K-means clustering for all the interchange stations in this city
-        const clustering_res = kmeans(trans_points, k).computeInformation(trans_points);
+        const clustering_res = kmeans(
+            trans_points, 
+            args.kmeans_k,
+            {seed: 0, initialization: 'kmeans++'}
+        ).computeInformation(trans_points);
         clustering_res.forEach(clus => {
-            circle = drawCircle(clus.centroid[0], clus.centroid[1], clus.size * interchange_st_circle_r_weight, 'black', 'black', '1px', '0.4', '0.4', false);
+            circle = drawCircle(clus.centroid[0], clus.centroid[1], clus.size * args.interchange_st_circle_r_weight, 'black', 'black', '1px', '0.4', '0.4', false);
             svg.appendChild(circle);
         });
     }
@@ -7479,7 +7506,7 @@ function parseData(jsonData, svg, subcaptionId){
     // });
 }
 
-function initializeVCPair(visualizationId, filePaths, captionId, initialCaption, subcaptionId) {
+function initializeVCPair(args, visualizationId, filePaths, captionId, initialCaption, subcaptionId) {
     // This function creates canvas and reads JSON file for a single city with id
 
     const visualization = document.getElementById(visualizationId);
@@ -7495,7 +7522,7 @@ function initializeVCPair(visualizationId, filePaths, captionId, initialCaption,
         dataType: "json",
         success: 
         function (data) {
-            parseData(data, svg, subcaptionId)
+            parseData(data, svg, subcaptionId, args)
         }
     });
 
@@ -7506,10 +7533,7 @@ function initializeVCPair(visualizationId, filePaths, captionId, initialCaption,
 
 
 // main function
-const path = require('path');
 const folderPath = './static/json';
-const visualizationContainer = document.getElementById('visualization-container');
-
 const files = ['北京.json', '上海.json', '广州.json', '深圳.json', '成都.json', '郑州.json',  
 '重庆.json', '杭州.json', '佛山.json', '兰州.json', '南京.json', '南宁.json', '南昌.json', 
 '厦门.json', '合肥.json', '呼和浩特.json', '哈尔滨.json', '大连.json', '天津.json', '太原.json', 
@@ -7518,14 +7542,17 @@ const files = ['北京.json', '上海.json', '广州.json', '深圳.json', '成�
 '福州.json', '苏州.json', '西安.json', '贵阳.json',  '长春.json', '东莞.json',
 '长沙.json', '青岛.json', '香港.json']
 
-// const files = ['广州.json', '成都.json']
-
+// 全部城市的界面
+const default_args = new Args();
+const visualizationContainer = document.getElementById('visualization-container');
 // Iterate all the cities
 for (let i = 0; i < files.length; i++){
-    const city_name = files[i].split('.json')[0]
+    const city_name = files[i].split('.json')[0];
     const filePaths = path.join(folderPath, files[i]);
     const v_c_pair = document.createElement('div');
-    v_c_pair.classList.add('v-c-pair-container');
+    v_c_pair.classList.add('v-c-pair-container.small');
+    // const v_c_pairId = `v_c_pairId${i}`;
+    // v_c_pair.setAttribute('id', v_c_pairId);
 
     const visualizationId = `visualization${i}`;
     const captionId = `caption${i}`;
@@ -7533,7 +7560,7 @@ for (let i = 0; i < files.length; i++){
     const subcaptionId = `subcaption${i}`;
 
     v_c_pair.innerHTML = `
-        <div class="visualization" id="${visualizationId}"></div>
+        <div class="visualization shadow" id="${visualizationId}"></div>
         <div class="text-container">
             <span class="caption zhimangxing" id="${captionId}">${initialCaption}</span>
             <span class="caption" id="${subcaptionId}"></span>
@@ -7542,9 +7569,65 @@ for (let i = 0; i < files.length; i++){
 
     visualizationContainer.appendChild(v_c_pair);
 
-    initializeVCPair(visualizationId, filePaths, captionId, initialCaption, subcaptionId);
+    initializeVCPair(default_args, visualizationId, filePaths, captionId, initialCaption, subcaptionId);
 }
 
+// 点击某个城市后的触发事件
+document.addEventListener("DOMContentLoaded", function () {
+    const foregroundSvg = document.getElementById("foreground-svg");
+    const overlay = document.getElementById('overlay');
+
+    document.getElementById('visualization0').addEventListener('click', function() {
+        overlay.classList.add('blur-in');
+        overlay.style.display = 'block';
+        foregroundSvg.style.display = "block";
+
+
+        const sourceId = parseInt('visualization0'.match(/\d+$/)[0]);
+
+        const city_name = files[sourceId].split('.json')[0];
+        const filePaths = path.join(folderPath, files[sourceId]);
+        const v_c_pair = document.createElement('div');
+        v_c_pair.classList.add('v-c-pair-container');
+        // const v_c_pairId = `v_c_pairId_scaled${sourceId}`;
+        // v_c_pair.setAttribute('id', v_c_pairId);
+        const visualizationId = `visualization_scaled${sourceId}`;
+        const captionId = `caption_scaled${sourceId}`;
+        const initialCaption = city_name;
+        const subcaptionId = `subcaption_scaled${sourceId}`;
+
+        v_c_pair.innerHTML = `
+            <div class="visualization" id="${visualizationId}"></div>
+            <div class="text-container">
+                <span class="caption zhimangxinglarge" id="${captionId}">${initialCaption}</span>
+                <span class="caption large" id="${subcaptionId}"></span>
+            </div>
+        `;
+
+        v_c_pair.classList.add('scaled-city');
+        // v_c_pair.classList.add('scaled');
+        overlay.appendChild(v_c_pair);
+
+        const args = new Args();
+        args.scale(3.0);
+        initializeVCPair(args, visualizationId, filePaths, captionId, initialCaption, subcaptionId);
+    });
+
+    foregroundSvg.addEventListener('click', function() {
+
+        overlay.removeChild(overlay.querySelector('.v-c-pair-container'));
+
+        foregroundSvg.style.display = "none";
+        overlay.classList.add('blur-out');
+        // overlay.style.display = 'none';
+        overlay.addEventListener('animationend', function() {
+            overlay.style.display = 'none';
+            // Remove the animation classes to reset for the next time
+            overlay.classList.remove('blur-in', 'blur-out');
+        }, { once: true });
+    });
+
+});
 
 
 
