@@ -7279,20 +7279,20 @@ function setMouseOverText(svg, args, target, isLine=true, lineInfo= '线路名�
             const y2 = parseFloat(target.getAttribute('y2'));
 
             let angle;
-            if (y2 - y1 === 0) {
+            if (x2 - x1 === 0) {
                 // Points are on the same horizontal line
-                angle = (x2 - x1 >= 0) ? 0 : 180;
+                angle = (y2 - y1 >= 0) ? -90 : 90;
             } else {
                 angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
             }
 
             if (angle > 90 || angle < -90) {
-                // If the line is in the bottom half, adjust angle and text anchor
+                // If the line is in the bottom half, adjust angle
                 angle += 180;
             }
 
-            let textX = (x1 + x2) / 2 + (parseFloat(stroke_width) + 2 + args.hover_text_offset) * Math.cos(angle);
-            let textY = (y1 + y2) / 2 - (parseFloat(stroke_width) + 2 + args.hover_text_offset) * Math.sin(angle);
+            let textX = (x1 + x2) / 2 - (parseFloat(stroke_width) + 2 + args.hover_text_offset) * Math.sin((angle / 180) * Math.PI);
+            let textY = (y1 + y2) / 2 + (parseFloat(stroke_width) + 2 + args.hover_text_offset) * Math.cos((angle / 180) * Math.PI);
 
             // Set text attributes
             text.setAttribute('x', textX);
@@ -7372,7 +7372,7 @@ function drawLine(x1, y1, x2, y2, stroke, stroke_width, opacity, lineCap='butt',
     return line;
 }
 
-function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity, fill_opacity, pointerEvents=true) {
+function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity, fill_opacity, pointerEvents=true, animation=false) {
     // This function is used to draw a circle
 
     const svgNS = "http://www.w3.org/2000/svg";
@@ -7395,6 +7395,38 @@ function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity, fill_op
     }
 
     circle.classList.add('opacity-change');
+
+    if (animation){
+        // 添加一个创建时半径从0到targetRadius的动画效果
+        const styleTag = document.createElement('style');
+        document.head.appendChild(styleTag);
+        const styleSheet = styleTag.sheet;
+        const targetRadius = radius;
+        const targetRadiusString = targetRadius.toString().replace('.', '_');
+        // 创建一个规则，包含动态的目标半径
+        const rule = `@keyframes expandRadius_${targetRadiusString} {
+            from {
+                r: 0;
+            }
+            to {
+                r: ${targetRadius};
+            }
+        }`;
+
+        const rule2 = `
+            .radius-change_${targetRadiusString} {
+                animation: expandRadius_${targetRadiusString} 1s ease-out;
+            }
+        `
+
+        // 将规则添加到样式表中
+        styleSheet.insertRule(rule);
+        styleSheet.insertRule(rule2);
+
+        // 将动画类直接添加到 circle 元素上
+        circle.classList.add(`radius-change_${targetRadiusString}`);
+    }
+
     return circle;
 }
 
@@ -7459,6 +7491,9 @@ function parseData(jsonData, svg, subcaptionId, args){
         const is_loop = subwayline.lo;
         const color = subwayline.cl;
         const station_num = subwayline.st.length;
+        const start_st_name = subwayline.st[0].n;
+        const terminal_st_name = subwayline.st[station_num - 1].n;
+        const textinfo = line_name + ' ' + start_st_name + '-' + terminal_st_name + ' ' + station_num.toFixed(0) + '站';
         // subwayline.st.forEach(station => {
         //     if (station.t == "1"){
         //         const [w, h] = splitPString(station.p, city_center, args.draw_offset, args.city_boundary);
@@ -7492,7 +7527,7 @@ function parseData(jsonData, svg, subcaptionId, args){
             svg.appendChild(circle_intro);
             circle_extro = drawCircle((x1+x2)/2, (y1+y2)/2, calculateRadius(x1, y1, x2, y2), 'none', '#' + color, thickness.toFixed(2) + 'px', '0.75', '0');
             svg.appendChild(circle_extro);
-            setMouseOverText(svg, args, circle_extro, false);
+            setMouseOverText(svg, args, circle_extro, false, textinfo);
             // subway_lines_and_circles.push(circle);
         }else
         {
@@ -7509,7 +7544,7 @@ function parseData(jsonData, svg, subcaptionId, args){
             }
             line = drawLine(x1, y1, x2, y2, '#' + color, thickness.toFixed(2) + 'px', '0.75');
             svg.appendChild(line);
-            setMouseOverText(svg, args, line);
+            setMouseOverText(svg, args, line, true, textinfo);
             // subway_lines_and_circles.push(line);
         }
     }
@@ -7522,7 +7557,7 @@ function parseData(jsonData, svg, subcaptionId, args){
             {seed: 0, initialization: 'kmeans++'}
         ).computeInformation(trans_points);
         clustering_res.forEach(clus => {
-            circle = drawCircle(clus.centroid[0], clus.centroid[1], clus.size * args.interchange_st_circle_r_weight, 'black', 'black', '1px', '0.4', '0.4', false);
+            circle = drawCircle(clus.centroid[0], clus.centroid[1], clus.size * args.interchange_st_circle_r_weight, 'black', 'black', '1px', '0.4', '0.4', false, true);
             svg.appendChild(circle);
         });
     }
