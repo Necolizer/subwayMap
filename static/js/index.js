@@ -1,3 +1,85 @@
+function setMouseOverText(svg, line, lineInfo= '线路名称： 起始站： 终点站： 站点数：') {
+    const x1 = parseFloat(line.getAttribute('x1'));
+    const y1 = parseFloat(line.getAttribute('y1'));
+    const x2 = parseFloat(line.getAttribute('x2'));
+    const y2 = parseFloat(line.getAttribute('y2'));
+    const stroke_width = line.getAttribute('stroke-width');
+    const stroke = line.getAttribute('stroke');
+    const opacity = line.getAttribute('opacity');
+
+    const opacity_multiply_factor = 0.5;
+
+    // Additional code to handle mouseover event
+    line.addEventListener('mouseover', function(event) {
+        // Highlight the line
+        line.setAttribute('stroke-width', (parseFloat(stroke_width) + 2).toFixed(2));
+        line.setAttribute('opacity', '1');
+
+        // Dim other elements in the SVG
+        const allElements = svg.children;
+        for (const element of allElements) {
+            if (element !== line) {
+                element.setAttribute('opacity', 
+                    (parseFloat(element.getAttribute('opacity')) * opacity_multiply_factor).toFixed(2)
+                );
+            }
+        }
+
+        // Create a text element for displaying information
+        const text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+        // const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+        let angle;
+        if (y2 - y1 === 0) {
+            // Points are on the same horizontal line
+            angle = (x2 - x1 >= 0) ? 0 : 180;
+        } else {
+            angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+        }
+        const textX = (x1 + x2) / 2 + parseFloat(stroke_width) + Math.sin(angle) * 5;
+        const textY = (y1 + y2) / 2 + parseFloat(stroke_width) + Math.cos(angle) * 5;
+        
+        // Set text attributes
+        text.setAttribute('x', textX);
+        text.setAttribute('y', textY);
+        text.setAttribute('fill', stroke); // Use line color for text
+        text.setAttribute('font-size', (4 * 2).toFixed(2)); // Font size proportional to line width
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('dominant-baseline', 'middle');
+        text.setAttribute('transform', `rotate(${angle},${textX},${textY})`);
+
+        // Set text content using lineInfo parameter
+        text.textContent = lineInfo;
+
+        // Append text element to the SVG
+        svg.appendChild(text);
+
+        // Save the text element reference to remove it on mouseout
+        line.hoverText = text;
+    });
+
+    // Additional code to handle mouseout event
+    line.addEventListener('mouseout', function(event) {
+        line.setAttribute('stroke-width', stroke_width);
+        line.setAttribute('opacity', opacity);
+
+        // Restore opacity of other elements in the SVG
+        const allElements = svg.children;
+        for (const element of allElements) {
+            if (element !== line) {
+                element.setAttribute('opacity', 
+                    (parseFloat(element.getAttribute('opacity')) / opacity_multiply_factor).toFixed(2)
+                );
+            }
+        }
+
+        // Remove the displayed information when mouse moves away from the line
+        if (line.hoverText) {
+            svg.removeChild(line.hoverText);
+            line.hoverText = null;
+        }
+    });
+}
+
 function drawLine(x1, y1, x2, y2, stroke, stroke_width, opacity, lineCap='butt', lineJoin='miter') {
     // This function is used to draw a line
 
@@ -18,54 +100,6 @@ function drawLine(x1, y1, x2, y2, stroke, stroke_width, opacity, lineCap='butt',
     // Additional attributes
     line.setAttribute('stroke-linecap', lineCap); // Options: butt, round, square
     line.setAttribute('stroke-linejoin', lineJoin); // Options: miter, round, bevel
-    
-    // 鼠标悬停、显示信息
-    const midX = (x1 + x2) / 2;
-    const midY = (y1 + y2) / 2;
-
-    // Additional code to handle mouseover event
-    line.addEventListener('mouseover', function(event) {
-        // Create a text element for displaying information
-        const text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
-        text.setAttribute('x', midX);
-        text.setAttribute('y', midY);
-        text.setAttribute('fill', 'black');
-        text.setAttribute('font-size', '12');
-        
-        // Information about the line's starting and ending points
-        const startingPoint = `Start: (${x1}, ${y1})`;
-        const endingPoint = `End: (${x2}, ${y2})`;
-
-        // Create two tspan elements for start and end points
-        const startTspan = document.createElementNS("http://www.w3.org/2000/svg", 'tspan');
-        startTspan.textContent = startingPoint;
-        startTspan.setAttribute('x', midX);
-        startTspan.setAttribute('dy', '1.2em');
-
-        const endTspan = document.createElementNS("http://www.w3.org/2000/svg", 'tspan');
-        endTspan.textContent = endingPoint;
-        endTspan.setAttribute('x', midX);
-        endTspan.setAttribute('dy', '1.2em');
-
-        // Append tspans to text element
-        text.appendChild(startTspan);
-        text.appendChild(endTspan);
-
-        // Append text element to the SVG
-        svg.appendChild(text);
-
-        // Save the text element reference to remove it on mouseout
-        line.hoverText = text;
-    });
-
-    // Additional code to handle mouseout event
-    line.addEventListener('mouseout', function(event) {
-        // Remove the displayed information when mouse moves away from the line
-        if (line.hoverText) {
-            svg.removeChild(line.hoverText);
-            line.hoverText = null;
-        }
-    });
 
     return line;
 }
@@ -188,7 +222,13 @@ function parseData(jsonData, svg, subcaptionId){
             const [x1, y1] = splitPString(first_station.p, city_center);
             const mid_station = subwayline.st[Math.floor(station_num/2)];
             const [x2, y2] = splitPString(mid_station.p, city_center);
-            thickness = thickness_offset + (station_num-min_st_num)/(max_st_num-min_st_num) * thickness_weight;
+            let thickness;
+            if (max_st_num !== min_st_num) {
+                thickness = thickness_offset + (station_num - min_st_num) / (max_st_num - min_st_num) * thickness_weight;
+            } else {
+                // Handle the case when max_st_num is equal to min_st_num
+                thickness = thickness_offset + 0.5 * thickness_weight;
+            }
             circle = drawCircle((x1+x2)/2, (y1+y2)/2, calculateRadius(x1, y1, x2, y2), '#' + color, '#' + color, thickness.toFixed(2) + 'px', '0.75', '0.5');
             svg.appendChild(circle);
             // subway_lines_and_circles.push(circle);
@@ -198,10 +238,16 @@ function parseData(jsonData, svg, subcaptionId){
             const [x1, y1] = splitPString(first_station.p, city_center);
             const last_station = subwayline.st[station_num - 1];
             const [x2, y2] = splitPString(last_station.p, city_center);
-            thickness = thickness_offset + (station_num-min_st_num)/(max_st_num-min_st_num) * thickness_weight;
+            let thickness;
+            if (max_st_num !== min_st_num) {
+                thickness = thickness_offset + (station_num - min_st_num) / (max_st_num - min_st_num) * thickness_weight;
+            } else {
+                // Handle the case when max_st_num is equal to min_st_num
+                thickness = thickness_offset + 0.5 * thickness_weight;
+            }
             line = drawLine(x1, y1, x2, y2, '#' + color, thickness.toFixed(2) + 'px', '0.75');
-            
             svg.appendChild(line);
+            setMouseOverText(svg, line);
             // subway_lines_and_circles.push(line);
         }
     }
