@@ -7216,7 +7216,7 @@ const { kmeans } = require('ml-kmeans');
 
 class Args {
     constructor(kmeans_k, opacity_multiply_factor, city_boundary, draw_offset, city_circle_r, city_circle_thickness,
-        thickness_offset, thickness_weight, interchange_st_circle_r_weight) {
+        thickness_offset, thickness_weight, interchange_st_circle_r_weight, hover_text_fontsize, hover_text_offset) {
         
         //不可以scale的值
         this.kmeans_k = kmeans_k || 6;
@@ -7227,9 +7227,11 @@ class Args {
         this.draw_offset = draw_offset || 100; //150; // Half the canvas width, and also height
         this.city_circle_r = city_circle_r || 95; //142;
         this.city_circle_thickness = city_circle_thickness || 10; //15;
-        this.thickness_offset = thickness_offset || 0.16; //0.25;
+        this.thickness_offset = thickness_offset || 0.2; //0.25;
         this.thickness_weight = thickness_weight || 3.8; //5.75;
         this.interchange_st_circle_r_weight = interchange_st_circle_r_weight || 0.67; //1.0;
+        this.hover_text_fontsize = hover_text_fontsize || 8;
+        this.hover_text_offset = hover_text_offset || 8;
     }
 
     scale(factor) {
@@ -7240,10 +7242,12 @@ class Args {
         this.thickness_offset *= factor;
         this.thickness_weight *= factor;
         this.interchange_st_circle_r_weight *= factor;
+        this.hover_text_fontsize *= factor;
+        this.hover_text_offset *= factor;
     }
 }
 
-function setMouseOverText(svg, line, opacity_multiply_factor, lineInfo= '线路名称： 起始站： 终点站： 站点数：') {
+function setMouseOverText(svg, args, line, lineInfo= '线路名称： 起始站： 终点站： 站点数：') {
     // 设置线悬停时的效果和文字
     const x1 = parseFloat(line.getAttribute('x1'));
     const y1 = parseFloat(line.getAttribute('y1'));
@@ -7264,14 +7268,14 @@ function setMouseOverText(svg, line, opacity_multiply_factor, lineInfo= '线路�
         for (const element of allElements) {
             if (element !== line) {
                 element.setAttribute('opacity', 
-                    (parseFloat(element.getAttribute('opacity')) * opacity_multiply_factor).toFixed(2)
+                    (parseFloat(element.getAttribute('opacity')) * args.opacity_multiply_factor).toFixed(2)
                 );
             }
         }
 
         // Create a text element for displaying information
         const text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
-        // const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+
         let angle;
         if (y2 - y1 === 0) {
             // Points are on the same horizontal line
@@ -7279,14 +7283,20 @@ function setMouseOverText(svg, line, opacity_multiply_factor, lineInfo= '线路�
         } else {
             angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
         }
-        const textX = (x1 + x2) / 2 + parseFloat(stroke_width) + Math.sin(angle) * 5;
-        const textY = (y1 + y2) / 2 + parseFloat(stroke_width) + Math.cos(angle) * 5;
-        
+
+        if (angle > 90 || angle < -90) {
+            // If the line is in the bottom half, adjust angle and text anchor
+            angle += 180;
+        }
+
+        let textX = (x1 + x2) / 2 + (parseFloat(stroke_width) + 2 + args.hover_text_offset) * Math.sin(angle);
+        let textY = (y1 + y2) / 2 + (parseFloat(stroke_width) + 2 + args.hover_text_offset) * Math.cos(angle);
+
         // Set text attributes
         text.setAttribute('x', textX);
         text.setAttribute('y', textY);
         text.setAttribute('fill', stroke); // Use line color for text
-        text.setAttribute('font-size', (4 * 2).toFixed(2)); // Font size proportional to line width
+        text.setAttribute('font-size', (args.hover_text_fontsize).toFixed(2));
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('dominant-baseline', 'middle');
         text.setAttribute('transform', `rotate(${angle},${textX},${textY})`);
@@ -7311,7 +7321,7 @@ function setMouseOverText(svg, line, opacity_multiply_factor, lineInfo= '线路�
         for (const element of allElements) {
             if (element !== line) {
                 element.setAttribute('opacity', 
-                    (parseFloat(element.getAttribute('opacity')) / opacity_multiply_factor).toFixed(2)
+                    (parseFloat(element.getAttribute('opacity')) / args.opacity_multiply_factor).toFixed(2)
                 );
             }
         }
@@ -7483,7 +7493,7 @@ function parseData(jsonData, svg, subcaptionId, args){
             }
             line = drawLine(x1, y1, x2, y2, '#' + color, thickness.toFixed(2) + 'px', '0.75');
             svg.appendChild(line);
-            setMouseOverText(svg, line, args.opacity_multiply_factor);
+            setMouseOverText(svg, args, line);
             // subway_lines_and_circles.push(line);
         }
     }
@@ -7577,41 +7587,44 @@ document.addEventListener("DOMContentLoaded", function () {
     const foregroundSvg = document.getElementById("foreground-svg");
     const overlay = document.getElementById('overlay');
 
-    document.getElementById('visualization0').addEventListener('click', function() {
-        overlay.classList.add('blur-in');
-        overlay.style.display = 'block';
-        foregroundSvg.style.display = "block";
+    for (let i = 0; i < files.length; i++){
+        const visualizationId = `visualization${i}`;
+        document.getElementById(visualizationId).addEventListener('click', function() {
+            overlay.classList.add('blur-in');
+            overlay.style.display = 'block';
+            foregroundSvg.style.display = "block";
 
 
-        const sourceId = parseInt('visualization0'.match(/\d+$/)[0]);
+            const sourceId = i; //parseInt('visualization0'.match(/\d+$/)[0]);
 
-        const city_name = files[sourceId].split('.json')[0];
-        const filePaths = path.join(folderPath, files[sourceId]);
-        const v_c_pair = document.createElement('div');
-        v_c_pair.classList.add('v-c-pair-container');
-        // const v_c_pairId = `v_c_pairId_scaled${sourceId}`;
-        // v_c_pair.setAttribute('id', v_c_pairId);
-        const visualizationId = `visualization_scaled${sourceId}`;
-        const captionId = `caption_scaled${sourceId}`;
-        const initialCaption = city_name;
-        const subcaptionId = `subcaption_scaled${sourceId}`;
+            const city_name = files[sourceId].split('.json')[0];
+            const filePaths = path.join(folderPath, files[sourceId]);
+            const v_c_pair = document.createElement('div');
+            v_c_pair.classList.add('v-c-pair-container');
+            // const v_c_pairId = `v_c_pairId_scaled${sourceId}`;
+            // v_c_pair.setAttribute('id', v_c_pairId);
+            const visualizationId = `visualization_scaled${sourceId}`;
+            const captionId = `caption_scaled${sourceId}`;
+            const initialCaption = city_name;
+            const subcaptionId = `subcaption_scaled${sourceId}`;
 
-        v_c_pair.innerHTML = `
-            <div class="visualization" id="${visualizationId}"></div>
-            <div class="text-container">
-                <span class="caption zhimangxinglarge" id="${captionId}">${initialCaption}</span>
-                <span class="caption large" id="${subcaptionId}"></span>
-            </div>
-        `;
+            v_c_pair.innerHTML = `
+                <div class="visualization" id="${visualizationId}"></div>
+                <div class="text-container">
+                    <span class="caption zhimangxinglarge" id="${captionId}">${initialCaption}</span>
+                    <span class="caption large" id="${subcaptionId}"></span>
+                </div>
+            `;
 
-        v_c_pair.classList.add('scaled-city');
-        // v_c_pair.classList.add('scaled');
-        overlay.appendChild(v_c_pair);
+            v_c_pair.classList.add('scaled-city');
+            // v_c_pair.classList.add('scaled');
+            overlay.appendChild(v_c_pair);
 
-        const args = new Args();
-        args.scale(3.0);
-        initializeVCPair(args, visualizationId, filePaths, captionId, initialCaption, subcaptionId);
-    });
+            const args = new Args();
+            args.scale(3.0);
+            initializeVCPair(args, visualizationId, filePaths, captionId, initialCaption, subcaptionId);
+        });
+    }
 
     foregroundSvg.addEventListener('click', function() {
 
