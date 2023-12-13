@@ -67,3 +67,7 @@
 .svg-foreground:hover {
     opacity: 0.3;
 }
+
+.opacity-change {
+    transition: opacity 1.0s ease;
+}

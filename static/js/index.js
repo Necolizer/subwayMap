@@ -29,31 +29,27 @@ class Args {
         this.thickness_offset *= factor;
         this.thickness_weight *= factor;
         this.interchange_st_circle_r_weight *= factor;
-        this.hover_text_fontsize *= factor;
+        this.hover_text_fontsize *= (factor * 0.8);
         this.hover_text_offset *= factor;
     }
 }
 
-function setMouseOverText(svg, args, line, lineInfo= '线路名称： 起始站： 终点站： 站点数：') {
+function setMouseOverText(svg, args, target, isLine=true, lineInfo= '线路名称： 起始站： 终点站： 站点数：') {
     // 设置线悬停时的效果和文字
-    const x1 = parseFloat(line.getAttribute('x1'));
-    const y1 = parseFloat(line.getAttribute('y1'));
-    const x2 = parseFloat(line.getAttribute('x2'));
-    const y2 = parseFloat(line.getAttribute('y2'));
-    const stroke_width = line.getAttribute('stroke-width');
-    const stroke = line.getAttribute('stroke');
-    const opacity = line.getAttribute('opacity');
+    const stroke_width = target.getAttribute('stroke-width');
+    const stroke = target.getAttribute('stroke');
+    const opacity = target.getAttribute('opacity');
 
     // Additional code to handle mouseover event
-    line.addEventListener('mouseover', function(event) {
-        // Highlight the line
-        line.setAttribute('stroke-width', (parseFloat(stroke_width) + 2).toFixed(2));
-        line.setAttribute('opacity', '1');
+    target.addEventListener('mouseover', function(event) {
+        // Highlight the target
+        target.setAttribute('stroke-width', (parseFloat(stroke_width) + 2).toFixed(2));
+        target.setAttribute('opacity', '1');
 
         // Dim other elements in the SVG
         const allElements = svg.children;
         for (const element of allElements) {
-            if (element !== line) {
+            if (element !== target) {
                 element.setAttribute('opacity', 
                     (parseFloat(element.getAttribute('opacity')) * args.opacity_multiply_factor).toFixed(2)
                 );
@@ -63,60 +59,77 @@ function setMouseOverText(svg, args, line, lineInfo= '线路名称： 起始站�
         // Create a text element for displaying information
         const text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
 
-        let angle;
-        if (y2 - y1 === 0) {
-            // Points are on the same horizontal line
-            angle = (x2 - x1 >= 0) ? 0 : 180;
-        } else {
-            angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+        if (isLine){
+            const x1 = parseFloat(target.getAttribute('x1'));
+            const y1 = parseFloat(target.getAttribute('y1'));
+            const x2 = parseFloat(target.getAttribute('x2'));
+            const y2 = parseFloat(target.getAttribute('y2'));
+
+            let angle;
+            if (y2 - y1 === 0) {
+                // Points are on the same horizontal line
+                angle = (x2 - x1 >= 0) ? 0 : 180;
+            } else {
+                angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+            }
+
+            if (angle > 90 || angle < -90) {
+                // If the line is in the bottom half, adjust angle and text anchor
+                angle += 180;
+            }
+
+            let textX = (x1 + x2) / 2 + (parseFloat(stroke_width) + 2 + args.hover_text_offset) * Math.cos(angle);
+            let textY = (y1 + y2) / 2 - (parseFloat(stroke_width) + 2 + args.hover_text_offset) * Math.sin(angle);
+
+            // Set text attributes
+            text.setAttribute('x', textX);
+            text.setAttribute('y', textY);
+            text.setAttribute('fill', stroke); // Use line color for text
+            text.setAttribute('font-size', (args.hover_text_fontsize).toFixed(2));
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'middle');
+            text.setAttribute('transform', `rotate(${angle},${textX},${textY})`);
+        }else{
+            const cx = parseFloat(target.getAttribute('cx'));
+            const cy = parseFloat(target.getAttribute('cy'));
+            const radius = parseFloat(target.getAttribute('r'));
+            text.setAttribute('x', cx);
+            text.setAttribute('y', cy + radius + args.hover_text_offset);
+            text.setAttribute('fill', stroke); // Use line color for text
+            text.setAttribute('font-size', (args.hover_text_fontsize).toFixed(2));
+            text.setAttribute('text-anchor', 'middle');
+            // text.setAttribute('dominant-baseline', 'middle');
         }
-
-        if (angle > 90 || angle < -90) {
-            // If the line is in the bottom half, adjust angle and text anchor
-            angle += 180;
-        }
-
-        let textX = (x1 + x2) / 2 + (parseFloat(stroke_width) + 2 + args.hover_text_offset) * Math.sin(angle);
-        let textY = (y1 + y2) / 2 + (parseFloat(stroke_width) + 2 + args.hover_text_offset) * Math.cos(angle);
-
-        // Set text attributes
-        text.setAttribute('x', textX);
-        text.setAttribute('y', textY);
-        text.setAttribute('fill', stroke); // Use line color for text
-        text.setAttribute('font-size', (args.hover_text_fontsize).toFixed(2));
-        text.setAttribute('text-anchor', 'middle');
-        text.setAttribute('dominant-baseline', 'middle');
-        text.setAttribute('transform', `rotate(${angle},${textX},${textY})`);
-
-        // Set text content using lineInfo parameter
+        
+        text.style.pointerEvents = "none";
         text.textContent = lineInfo;
 
         // Append text element to the SVG
         svg.appendChild(text);
 
         // Save the text element reference to remove it on mouseout
-        line.hoverText = text;
+        target.hoverText = text;
     });
 
     // Additional code to handle mouseout event
-    line.addEventListener('mouseout', function(event) {
-        line.setAttribute('stroke-width', stroke_width);
-        line.setAttribute('opacity', opacity);
+    target.addEventListener('mouseout', function(event) {
+        target.setAttribute('stroke-width', stroke_width);
+        target.setAttribute('opacity', opacity);
 
         // Restore opacity of other elements in the SVG
         const allElements = svg.children;
         for (const element of allElements) {
-            if (element !== line) {
+            if (element !== target) {
                 element.setAttribute('opacity', 
                     (parseFloat(element.getAttribute('opacity')) / args.opacity_multiply_factor).toFixed(2)
                 );
             }
         }
 
-        // Remove the displayed information when mouse moves away from the line
-        if (line.hoverText) {
-            svg.removeChild(line.hoverText);
-            line.hoverText = null;
+        // Remove the displayed information when mouse moves away from the target
+        if (target.hoverText) {
+            svg.removeChild(target.hoverText);
+            target.hoverText = null;
         }
     });
 }
@@ -142,6 +155,7 @@ function drawLine(x1, y1, x2, y2, stroke, stroke_width, opacity, lineCap='butt',
     line.setAttribute('stroke-linecap', lineCap); // Options: butt, round, square
     line.setAttribute('stroke-linejoin', lineJoin); // Options: miter, round, bevel
 
+    line.classList.add('opacity-change');
     return line;
 }
 
@@ -167,6 +181,7 @@ function drawCircle(cx, cy, radius, fill, stroke, stroke_width, opacity, fill_op
         circle.style.pointerEvents = "none";
     }
 
+    circle.classList.add('opacity-change');
     return circle;
 }
 
@@ -264,6 +279,7 @@ function parseData(jsonData, svg, subcaptionId, args){
             svg.appendChild(circle_intro);
             circle_extro = drawCircle((x1+x2)/2, (y1+y2)/2, calculateRadius(x1, y1, x2, y2), 'none', '#' + color, thickness.toFixed(2) + 'px', '0.75', '0');
             svg.appendChild(circle_extro);
+            setMouseOverText(svg, args, circle_extro, false);
             // subway_lines_and_circles.push(circle);
         }else
         {
