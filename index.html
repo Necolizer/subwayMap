@@ -8,7 +8,20 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" />
     <link rel="stylesheet" href="./static/css/index.css">
     <link rel="stylesheet" href="./static/css/event.css">
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <link rel="stylesheet" href="./static/css/botton.css">
+    <link rel="stylesheet" href="./static/css/slider.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
+    <!-- <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css"> -->
+    <!-- <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script> -->
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.7.0/nouislider.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.7.0/nouislider.min.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.0/gsap.min.js"></script> -->
+    <!-- <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script> -->
+
+    <script src='https://code.jquery.com/jquery-3.4.1.min.js'></script>
+    <script src='https://code.jquery.com/ui/1.12.0/jquery-ui.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/gsap/2.1.3/TweenMax.min.js'></script>
 </head>
 
 <body>
@@ -22,15 +35,36 @@
     中国城市地铁系统可视化
 </h1>
 
+<div class="box">
+    <div class="values">
+        <div><span id="first"></span></div> - <div><span id="second"></span></div>
+    </div>
+    <small>
+        间隔
+        <div><span id="third"></span></div>
+    </small>
+
+    <div class="slider" data-value-0="#first" data-value-1="#second" data-range="#third"></div>
+
+</div>
+<script src="./static/js/slider.js"></script>
+
+
+<div class="select-menu-container">
+    <select data-menu>
+        <option>3</option>
+        <option>4</option>
+        <option>5</option>
+        <option selected>6</option>
+        <option>7</option>
+    </select>
+</div>
+
 <div class="visualization-container" id="visualization-container"></div>
 <!-- 弹出的页面 -->
 <div class="overlay" id="overlay"></div>
 
 <script src="./static/js/indexBundle.js"></script>
-<!-- <script type="module" src="./static/js/t1Bundle.js"></script>
-<script type="module" src="./static/js/t2.js"></script> -->
-
-<!-- <script src="./static/js/event.js"></script> -->
 
 <footer class="footer">
     <p>&copy; 2023 SYSU ISE Big Data & Visualization</p>

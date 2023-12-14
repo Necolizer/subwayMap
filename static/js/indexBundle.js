@@ -7214,9 +7214,22 @@ process.umask = function() { return 0; };
 const path = require('path');
 const { kmeans } = require('ml-kmeans');
 
+const folderPath = './static/json';
+const files = ['北京.json', '上海.json', '广州.json', '深圳.json', '成都.json', '香港.json', '郑州.json',  
+'重庆.json', '杭州.json', '佛山.json', '兰州.json', '南京.json', '南宁.json', '南昌.json', 
+'厦门.json', '合肥.json', '呼和浩特.json', '哈尔滨.json', '大连.json', '天津.json', '太原.json', 
+'宁波.json', '常州.json', '徐州.json',  '无锡.json', '昆明.json', '乌鲁木齐.json',
+'武汉.json', '沈阳.json', '洛阳.json', '济南.json',  '温州.json', '石家庄.json', 
+'福州.json', '苏州.json', '西安.json', '贵阳.json',  '长春.json', '东莞.json',
+'长沙.json', '青岛.json', '芜湖.json', '滁州.json', '绍兴.json', '金华.json', 
+'台州.json', '湘潭.json', '湘西.json', '南通.json', '澳门.json']
+
+let subwayLinesList = [];
+
 class Args {
     constructor(kmeans_k, opacity_multiply_factor, city_boundary, draw_offset, city_circle_r, city_circle_thickness,
-        thickness_offset, thickness_weight, interchange_st_circle_r_weight, hover_text_fontsize, hover_text_offset) {
+        thickness_offset, thickness_weight, interchange_st_circle_r_weight, hover_text_fontsize, hover_text_offset,
+        hover_text_animation_len) {
         
         //不可以scale的值
         this.kmeans_k = kmeans_k || 6;
@@ -7232,6 +7245,7 @@ class Args {
         this.interchange_st_circle_r_weight = interchange_st_circle_r_weight || 0.67; //1.0;
         this.hover_text_fontsize = hover_text_fontsize || 8;
         this.hover_text_offset = hover_text_offset || 8;
+        this.hover_text_animation_len = hover_text_animation_len || 500/3;
     }
 
     scale(factor) {
@@ -7244,8 +7258,12 @@ class Args {
         this.interchange_st_circle_r_weight *= factor;
         this.hover_text_fontsize *= (factor * 0.8);
         this.hover_text_offset *= factor;
+        this.hover_text_animation_len *= factor;
     }
 }
+
+const default_args = new Args();
+const visualizationContainer = document.getElementById('visualization-container');
 
 function setMouseOverText(svg, args, target, isLine=true, lineInfo= '线路名称： 起始站： 终点站： 站点数：') {
     // 设置线悬停时的效果和文字
@@ -7317,6 +7335,15 @@ function setMouseOverText(svg, args, target, isLine=true, lineInfo= '线路名�
         text.style.fontFamily = 'Noto Sans SC, sans-serif';
         text.style.pointerEvents = "none";
         text.textContent = lineInfo;
+
+        const textLength = text.getComputedTextLength();
+        const animate = document.createElementNS("http://www.w3.org/2000/svg", 'animate');
+        animate.setAttribute('attributeName', 'x');
+        animate.setAttribute('values', `${-textLength}; ${args.hover_text_animation_len}`);
+        animate.setAttribute('dur', '5s'); // 持续时间
+        animate.setAttribute('repeatCount', 'indefinite'); // 无限循环
+
+        text.appendChild(animate);
 
         // Append text element to the SVG
         svg.appendChild(text);
@@ -7454,6 +7481,26 @@ function calculateRadius(x1, y1, x2, y2) {
     return radius;
 }
 
+function convertDateString(inputString) {
+    // Extract year, month, and day from the input string
+    const match = inputString.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+
+    if (!match) {
+        // Handle invalid input
+        return 'Invalid Date';
+    }
+
+    const [, year, month, day] = match;
+
+    // Create a new Date object using the extracted values
+    const parsedDate = new Date(`${year}-${month}-${day}`);
+
+    // Format the date as 'YYYY-MM-DD'
+    const formattedDate = parsedDate.toISOString().split('T')[0];
+
+    return formattedDate;
+}
+
 function parseData(jsonData, svg, subcaptionId, args){
     // This function parses a city JSON file
 
@@ -7484,7 +7531,6 @@ function parseData(jsonData, svg, subcaptionId, args){
 
     // Push all the interchange stations in a list
     const trans_points = [];
-    // const subway_lines_and_circles = [];
 
     // Iterate all the subway lines
     for (const subwayline of jsonData.l) {
@@ -7492,16 +7538,10 @@ function parseData(jsonData, svg, subcaptionId, args){
         const is_loop = subwayline.lo;
         const color = subwayline.cl;
         const station_num = subwayline.st.length;
+        const start_date = subwayline.start_date;
         const start_st_name = subwayline.st[0].n;
         const terminal_st_name = subwayline.st[station_num - 1].n;
-        const textinfo = line_name + ' ' + start_st_name + '-' + terminal_st_name + ' ' + station_num.toFixed(0) + '站';
-        // subwayline.st.forEach(station => {
-        //     if (station.t == "1"){
-        //         const [w, h] = splitPString(station.p, city_center, args.draw_offset, args.city_boundary);
-        //         circle = drawCircle(w, h, 3, '#' + color, 'black', '1px', '0.5', '0.5', false);
-        //         svg.appendChild(circle);
-        //     }
-        // });
+        const textinfo = line_name + ' ' + start_st_name + '-' + terminal_st_name + ' ' + station_num.toFixed(0) + '站 ' + start_date + '开通';
         
         // Push all the interchange stations in a list
         subwayline.st.forEach(station => {
@@ -7525,11 +7565,14 @@ function parseData(jsonData, svg, subcaptionId, args){
                 thickness = args.thickness_offset + 0.5 * args.thickness_weight;
             }
             circle_intro = drawCircle((x1+x2)/2, (y1+y2)/2, (calculateRadius(x1, y1, x2, y2) - thickness/2), '#' + color, 'none', '0', '1', '0.5', false);
+            circle_intro.setAttribute('start_date', convertDateString(start_date));
+            subwayLinesList.push(circle_intro);
             svg.appendChild(circle_intro);
             circle_extro = drawCircle((x1+x2)/2, (y1+y2)/2, calculateRadius(x1, y1, x2, y2), 'none', '#' + color, thickness.toFixed(2) + 'px', '0.75', '0');
+            circle_extro.setAttribute('start_date', convertDateString(start_date));
+            subwayLinesList.push(circle_extro);
             svg.appendChild(circle_extro);
             setMouseOverText(svg, args, circle_extro, false, textinfo);
-            // subway_lines_and_circles.push(circle);
         }else
         {
             const first_station = subwayline.st[0];
@@ -7544,9 +7587,10 @@ function parseData(jsonData, svg, subcaptionId, args){
                 thickness = args.thickness_offset + 0.5 * args.thickness_weight;
             }
             line = drawLine(x1, y1, x2, y2, '#' + color, thickness.toFixed(2) + 'px', '0.75');
+            line.setAttribute('start_date', convertDateString(start_date));
+            subwayLinesList.push(line);
             svg.appendChild(line);
             setMouseOverText(svg, args, line, true, textinfo);
-            // subway_lines_and_circles.push(line);
         }
     }
 
@@ -7562,10 +7606,6 @@ function parseData(jsonData, svg, subcaptionId, args){
             svg.appendChild(circle);
         });
     }
-
-    // subway_lines_and_circles.forEach(lc =>{
-    //     svg.appendChild(lc);
-    // });
 }
 
 function initializeVCPair(args, visualizationId, filePaths, captionId, initialCaption, subcaptionId) {
@@ -7593,50 +7633,36 @@ function initializeVCPair(args, visualizationId, filePaths, captionId, initialCa
     caption.textContent = initialCaption;
 }
 
+function init(default_args){
+    // 全部城市的界面
+    // Iterate all the cities
+    for (let i = 0; i < files.length; i++){
+        const city_name = files[i].split('.json')[0];
+        const filePaths = path.join(folderPath, files[i]);
+        const v_c_pair = document.createElement('div');
+        v_c_pair.classList.add('v-c-pair-container.small');
+        // const v_c_pairId = `v_c_pairId${i}`;
+        // v_c_pair.setAttribute('id', v_c_pairId);
 
-// main function
-const folderPath = './static/json';
-const files = ['北京.json', '上海.json', '广州.json', '深圳.json', '成都.json', '香港.json', '郑州.json',  
-'重庆.json', '杭州.json', '佛山.json', '兰州.json', '南京.json', '南宁.json', '南昌.json', 
-'厦门.json', '合肥.json', '呼和浩特.json', '哈尔滨.json', '大连.json', '天津.json', '太原.json', 
-'宁波.json', '常州.json', '徐州.json',  '无锡.json', '昆明.json', '乌鲁木齐.json',
-'武汉.json', '沈阳.json', '洛阳.json', '济南.json',  '温州.json', '石家庄.json', 
-'福州.json', '苏州.json', '西安.json', '贵阳.json',  '长春.json', '东莞.json',
-'长沙.json', '青岛.json', '芜湖.json', '滁州.json', '绍兴.json', '金华.json', 
-'台州.json', '湘潭.json', '湘西.json', '南通.json', '澳门.json']
+        const visualizationId = `visualization${i}`;
+        const captionId = `caption${i}`;
+        const initialCaption = city_name;
+        const subcaptionId = `subcaption${i}`;
 
-// 全部城市的界面
-const default_args = new Args();
-const visualizationContainer = document.getElementById('visualization-container');
-// Iterate all the cities
-for (let i = 0; i < files.length; i++){
-    const city_name = files[i].split('.json')[0];
-    const filePaths = path.join(folderPath, files[i]);
-    const v_c_pair = document.createElement('div');
-    v_c_pair.classList.add('v-c-pair-container.small');
-    // const v_c_pairId = `v_c_pairId${i}`;
-    // v_c_pair.setAttribute('id', v_c_pairId);
+        v_c_pair.innerHTML = `
+            <div class="visualization shadow" id="${visualizationId}"></div>
+            <div class="text-container">
+                <span class="caption zhimangxing" id="${captionId}">${initialCaption}</span>
+                <span class="caption" id="${subcaptionId}"></span>
+            </div>
+        `;
 
-    const visualizationId = `visualization${i}`;
-    const captionId = `caption${i}`;
-    const initialCaption = city_name;
-    const subcaptionId = `subcaption${i}`;
+        visualizationContainer.appendChild(v_c_pair);
 
-    v_c_pair.innerHTML = `
-        <div class="visualization shadow" id="${visualizationId}"></div>
-        <div class="text-container">
-            <span class="caption zhimangxing" id="${captionId}">${initialCaption}</span>
-            <span class="caption" id="${subcaptionId}"></span>
-        </div>
-    `;
+        initializeVCPair(default_args, visualizationId, filePaths, captionId, initialCaption, subcaptionId);
+    }
 
-    visualizationContainer.appendChild(v_c_pair);
-
-    initializeVCPair(default_args, visualizationId, filePaths, captionId, initialCaption, subcaptionId);
-}
-
-// 点击某个城市后的触发事件
-document.addEventListener("DOMContentLoaded", function () {
+    // 点击某个城市后的触发事件
     const foregroundSvg = document.getElementById("foreground-svg");
     const overlay = document.getElementById('overlay');
 
@@ -7673,7 +7699,7 @@ document.addEventListener("DOMContentLoaded", function () {
             // v_c_pair.classList.add('scaled');
             overlay.appendChild(v_c_pair);
 
-            const args = new Args();
+            const args = new Args(default_args.kmeans_k);
             args.scale(3.0);
             initializeVCPair(args, visualizationId, filePaths, captionId, initialCaption, subcaptionId);
         });
@@ -7693,8 +7719,135 @@ document.addEventListener("DOMContentLoaded", function () {
         }, { once: true });
     });
 
+}
+
+function destroy(){
+    while (visualizationContainer.firstChild) {
+        visualizationContainer.removeChild(visualizationContainer.firstChild);
+    }
+    subwayLinesList = [];
+}
+
+// main function
+init(default_args);
+
+$('select[data-menu]').each(function() {
+
+    let select = $(this),
+        options = select.find('option'),
+        menu = $('<div />').addClass('select-menu'),
+        button = $('<div />').addClass('button'),
+        list = $('<ul />'),
+        arrow = $('<em />').prependTo(button);
+
+    options.each(function(i) {
+        let option = $(this);
+        list.append($('<li />').text(option.text()));
+    });
+
+    menu.css('--t', select.find(':selected').index() * -41 + 'px');
+
+    select.wrap(menu);
+
+    button.append(list).insertAfter(select);
+
+    list.clone().insertAfter(button);
+
 });
 
+$(document).on('click', '.select-menu', function(e) {
 
+    let menu = $(this);
+
+    if(!menu.hasClass('open')) {
+        menu.addClass('open');
+    }
+
+});
+
+$(document).on('click', '.select-menu > ul > li', function(e) {
+
+    let li = $(this),
+        menu = li.parent().parent(),
+        select = menu.children('select'),
+        selected = select.find('option:selected'),
+        index = li.index();
+
+    menu.css('--t', index * -41 + 'px');
+    selected.attr('selected', false);
+    select.find('option').eq(index).attr('selected', true);
+
+    menu.addClass(index > selected.index() ? 'tilt-down' : 'tilt-up');
+
+    setTimeout(() => {
+        menu.removeClass('open tilt-up tilt-down');
+    }, 500);
+
+    default_args.kmeans_k = parseInt(select.val(), 10);
+    destroy();
+    init(default_args);
+});
+
+$(document).click(e => {
+    e.stopPropagation();
+    if($('.select-menu').has(e.target).length === 0) {
+        $('.select-menu').removeClass('open');
+    }
+})
+
+const in_date = document.getElementById('first');
+const out_date = document.getElementById('second');
+
+// 创建一个 Mutation Observer 实例，传入一个回调函数
+const in_observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+    console.log('Content changed:', mutation.target.textContent);
+    const inDate = new Date(mutation.target.textContent);
+    const outDate = new Date(out_date.textContent);
+    for (const line of subwayLinesList) {
+        // 获取 'year_month_date' 属性值
+        const stringDate = line.getAttribute('start_date');
+        const lineDate = new Date(stringDate);
+    
+        // 判断属性值是否在起始日期和终止日期之间
+        if ((inDate <= lineDate) && (lineDate <= outDate)) {
+            // 在范围内，设为可见
+            line.style.visibility = 'visible';
+        } else {
+            // 不在范围内，设为不可见
+            line.style.visibility = 'hidden';
+        }
+    }
+    });
+});
+
+const out_observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+    console.log('Content changed:', mutation.target.textContent);
+    const inDate = new Date(in_date.textContent);
+    const outDate = new Date(mutation.target.textContent);
+    for (const line of subwayLinesList) {
+        // 获取 'year_month_date' 属性值
+        const stringDate = line.getAttribute('start_date');
+        const lineDate = new Date(stringDate);
+    
+        // 判断属性值是否在起始日期和终止日期之间
+        if ((inDate <= lineDate) && (lineDate <= outDate)) {
+            // 在范围内，设为可见
+            line.style.visibility = 'visible';
+        } else {
+            // 不在范围内，设为不可见
+            line.style.visibility = 'hidden';
+        }
+    }
+    });
+});
+
+// 配置 Mutation Observer 以监视子节点的内容变化
+const config = { childList: true, subtree: true };
+
+// 启动 Mutation Observer，并传入目标元素和配置
+in_observer.observe(in_date, config);
+out_observer.observe(out_date, config);
 
 },{"ml-kmeans":9,"path":16}]},{},[18]);
