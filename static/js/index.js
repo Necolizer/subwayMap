@@ -101,6 +101,7 @@ function setMouseOverText(svg, args, target, isLine=true, lineInfo= '线路名�
             // text.setAttribute('dominant-baseline', 'middle');
         }
         
+        text.style.fontFamily = 'Noto Sans SC, sans-serif';
         text.style.pointerEvents = "none";
         text.textContent = lineInfo;
 
@@ -270,7 +271,6 @@ function parseData(jsonData, svg, subcaptionId, args){
 
     // Push all the interchange stations in a list
     const trans_points = [];
-    // const subway_lines_and_circles = [];
 
     // Iterate all the subway lines
     for (const subwayline of jsonData.l) {
@@ -281,13 +281,6 @@ function parseData(jsonData, svg, subcaptionId, args){
         const start_st_name = subwayline.st[0].n;
         const terminal_st_name = subwayline.st[station_num - 1].n;
         const textinfo = line_name + ' ' + start_st_name + '-' + terminal_st_name + ' ' + station_num.toFixed(0) + '站';
-        // subwayline.st.forEach(station => {
-        //     if (station.t == "1"){
-        //         const [w, h] = splitPString(station.p, city_center, args.draw_offset, args.city_boundary);
-        //         circle = drawCircle(w, h, 3, '#' + color, 'black', '1px', '0.5', '0.5', false);
-        //         svg.appendChild(circle);
-        //     }
-        // });
         
         // Push all the interchange stations in a list
         subwayline.st.forEach(station => {
@@ -315,7 +308,6 @@ function parseData(jsonData, svg, subcaptionId, args){
             circle_extro = drawCircle((x1+x2)/2, (y1+y2)/2, calculateRadius(x1, y1, x2, y2), 'none', '#' + color, thickness.toFixed(2) + 'px', '0.75', '0');
             svg.appendChild(circle_extro);
             setMouseOverText(svg, args, circle_extro, false, textinfo);
-            // subway_lines_and_circles.push(circle);
         }else
         {
             const first_station = subwayline.st[0];
@@ -332,7 +324,6 @@ function parseData(jsonData, svg, subcaptionId, args){
             line = drawLine(x1, y1, x2, y2, '#' + color, thickness.toFixed(2) + 'px', '0.75');
             svg.appendChild(line);
             setMouseOverText(svg, args, line, true, textinfo);
-            // subway_lines_and_circles.push(line);
         }
     }
 
@@ -348,10 +339,6 @@ function parseData(jsonData, svg, subcaptionId, args){
             svg.appendChild(circle);
         });
     }
-
-    // subway_lines_and_circles.forEach(lc =>{
-    //     svg.appendChild(lc);
-    // });
 }
 
 function initializeVCPair(args, visualizationId, filePaths, captionId, initialCaption, subcaptionId) {
@@ -382,13 +369,14 @@ function initializeVCPair(args, visualizationId, filePaths, captionId, initialCa
 
 // main function
 const folderPath = './static/json';
-const files = ['北京.json', '上海.json', '广州.json', '深圳.json', '成都.json', '郑州.json',  
+const files = ['北京.json', '上海.json', '广州.json', '深圳.json', '成都.json', '香港.json', '郑州.json',  
 '重庆.json', '杭州.json', '佛山.json', '兰州.json', '南京.json', '南宁.json', '南昌.json', 
 '厦门.json', '合肥.json', '呼和浩特.json', '哈尔滨.json', '大连.json', '天津.json', '太原.json', 
 '宁波.json', '常州.json', '徐州.json',  '无锡.json', '昆明.json', '乌鲁木齐.json',
 '武汉.json', '沈阳.json', '洛阳.json', '济南.json',  '温州.json', '石家庄.json', 
 '福州.json', '苏州.json', '西安.json', '贵阳.json',  '长春.json', '东莞.json',
-'长沙.json', '青岛.json', '香港.json']
+'长沙.json', '青岛.json', '芜湖.json', '滁州.json', '绍兴.json', '金华.json', 
+'台州.json', '湘潭.json', '湘西.json', '南通.json', '澳门.json']
 
 // 全部城市的界面
 const default_args = new Args();

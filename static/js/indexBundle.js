@@ -7314,6 +7314,7 @@ function setMouseOverText(svg, args, target, isLine=true, lineInfo= '线路名�
             // text.setAttribute('dominant-baseline', 'middle');
         }
         
+        text.style.fontFamily = 'Noto Sans SC, sans-serif';
         text.style.pointerEvents = "none";
         text.textContent = lineInfo;
 
@@ -7595,13 +7596,14 @@ function initializeVCPair(args, visualizationId, filePaths, captionId, initialCa
 
 // main function
 const folderPath = './static/json';
-const files = ['北京.json', '上海.json', '广州.json', '深圳.json', '成都.json', '郑州.json',  
+const files = ['北京.json', '上海.json', '广州.json', '深圳.json', '成都.json', '香港.json', '郑州.json',  
 '重庆.json', '杭州.json', '佛山.json', '兰州.json', '南京.json', '南宁.json', '南昌.json', 
 '厦门.json', '合肥.json', '呼和浩特.json', '哈尔滨.json', '大连.json', '天津.json', '太原.json', 
 '宁波.json', '常州.json', '徐州.json',  '无锡.json', '昆明.json', '乌鲁木齐.json',
 '武汉.json', '沈阳.json', '洛阳.json', '济南.json',  '温州.json', '石家庄.json', 
 '福州.json', '苏州.json', '西安.json', '贵阳.json',  '长春.json', '东莞.json',
-'长沙.json', '青岛.json', '香港.json']
+'长沙.json', '青岛.json', '芜湖.json', '滁州.json', '绍兴.json', '金华.json', 
+'台州.json', '湘潭.json', '湘西.json', '南通.json', '澳门.json']
 
 // 全部城市的界面
 const default_args = new Args();
