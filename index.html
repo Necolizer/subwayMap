@@ -52,14 +52,24 @@
     中国城市地铁系统可视化
 </h1>
 
-<div class="select-menu-container">
-    <select data-menu>
-        <option>3</option>
-        <option>4</option>
-        <option>5</option>
-        <option selected>6</option>
-        <option>7</option>
-    </select>
+<div class="multiple-select-menu-container">
+    <div class="select-menu-container" id="kmeans-k">
+        <select data-menu>
+            <option>3</option>
+            <option>4</option>
+            <option>5</option>
+            <option selected>6</option>
+            <option>7</option>
+        </select>
+    </div>
+
+    <div class="select-menu-container" id="kmeans-init">
+        <select data-menu>
+            <option>随机</option>
+            <option selected>Kmeans++</option>
+            <option>最远点</option>
+        </select>
+    </div>
 </div>
 
 <div class="visualization-container" id="visualization-container"></div>

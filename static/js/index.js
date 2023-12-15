@@ -18,12 +18,14 @@ let subwayLinesList = [];
 let defaultSubwayLinesListLen;
 
 class Args {
-    constructor(kmeans_k, opacity_multiply_factor, city_boundary, draw_offset, city_circle_r, city_circle_thickness,
+    constructor(kmeans_k, kmeans_init, opacity_multiply_factor, 
+        city_boundary, draw_offset, city_circle_r, city_circle_thickness,
         thickness_offset, thickness_weight, interchange_st_circle_r_weight, hover_text_fontsize, hover_text_offset,
         hover_text_animation_len, city_background_scale, city_background_tranlateX, city_background_tranlateY) {
         
         //不可以scale的值
         this.kmeans_k = kmeans_k || 6;
+        this.kmeans_init = kmeans_init || 'kmeans++';
         this.opacity_multiply_factor = opacity_multiply_factor || 0.25,
 
         // 可以scale的值
@@ -431,7 +433,7 @@ function parseData(jsonData, svg, subcaptionId, args, initialCaption){
         const clustering_res = kmeans(
             trans_points, 
             args.kmeans_k,
-            {seed: 0, initialization: 'kmeans++'}
+            {seed: 0, initialization: args.kmeans_init}
         ).computeInformation(trans_points);
         clustering_res.forEach(clus => {
             circle = drawCircle(clus.centroid[0], clus.centroid[1], clus.size * args.interchange_st_circle_r_weight, 'black', 'black', '1px', '0.4', '0.4', false, true);
@@ -534,7 +536,7 @@ function init(default_args){
             v_c_pair.classList.add('scaled-city');
             overlay.appendChild(v_c_pair);
 
-            const args = new Args(default_args.kmeans_k);
+            const args = new Args(default_args.kmeans_k, default_args.kmeans_init);
             args.scale(3.0);
             initializeVCPair(args, visualizationId, filePaths, captionId, initialCaption, subcaptionId);
         });
@@ -622,7 +624,19 @@ $(document).on('click', '.select-menu > ul > li', function(e) {
         menu.removeClass('open tilt-up tilt-down');
     }, 500);
 
-    default_args.kmeans_k = parseInt(select.val(), 10);
+    const selectMenuId = menu.parent().attr('id');
+    if (selectMenuId == 'kmeans-k') {
+        default_args.kmeans_k = parseInt(select.val(), 10);
+    } 
+    else if (selectMenuId == 'kmeans-init') {
+        if (select.val() == '最远点'){
+            default_args.kmeans_init = 'mostDistant';
+        }else if (select.val() == '随机'){
+            default_args.kmeans_init = 'random';
+        }else{
+            default_args.kmeans_init = 'kmeans++';
+        }
+    }
     destroy();
     init(default_args);
 });
