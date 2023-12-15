@@ -31,24 +31,26 @@
     <path d="m16.707,8.707l-3.293,3.293,3.293,3.293-1.414,1.414-3.293-3.293-3.293,3.293-1.414-1.414,3.293-3.293-3.293-3.293,1.414-1.414,3.293,3.293,3.293-3.293,1.414,1.414Zm7.293,3.293c0,6.617-5.383,12-12,12S0,18.617,0,12,5.383,0,12,0s12,5.383,12,12Zm-2,0c0-5.514-4.486-10-10-10S2,6.486,2,12s4.486,10,10,10,10-4.486,10-10Z"/>
 </svg>
 
-<h1 class="page-caption" id="page-caption">
-    中国城市地铁系统可视化
-</h1>
+<div class="config-container">
+    <div class="box">
+        <div class="values">
+            <div><span id="first"></span></div> - <div><span id="second"></span></div>
+        </div>
+        <small>
+            间隔
+            <div><span id="third"></span></div>
+        </small>
 
-<div class="box">
-    <div class="values">
-        <div><span id="first"></span></div> - <div><span id="second"></span></div>
+        <div class="slider" data-value-0="#first" data-value-1="#second" data-range="#third"></div>
+
     </div>
-    <small>
-        间隔
-        <div><span id="third"></span></div>
-    </small>
-
-    <div class="slider" data-value-0="#first" data-value-1="#second" data-range="#third"></div>
-
+    
 </div>
 <script src="./static/js/slider.js"></script>
 
+<h1 class="page-caption" id="page-caption">
+    中国城市地铁系统可视化
+</h1>
 
 <div class="select-menu-container">
     <select data-menu>

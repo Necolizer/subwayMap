@@ -10,7 +10,9 @@ body {
     --text: #99A3BA;
     width: 100%;
     max-width: 312px;
-    padding: 36px 32px 48px 32px;
+    margin-left: 10px;
+    margin-right: auto;
+    padding: 15px 32px 15px 32px;
     background: #fff;
     border-radius: 9px;
     box-shadow: 0 1px 4px rgba(18, 22, 33, .12);
@@ -48,10 +50,10 @@ body {
         color: var(--text);
         display: block;
         margin-top: 8px;
-        font-size: 14px;
+        font-size: 12px;
     }
     .slider {
-        margin-top: 40px;
+        margin-top: 5px;
     }
 }
 

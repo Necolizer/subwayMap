@@ -7225,6 +7225,7 @@ const files = ['北京.json', '上海.json', '广州.json', '深圳.json', '成�
 '台州.json', '湘潭.json', '湘西.json', '南通.json', '澳门.json']
 
 let subwayLinesList = [];
+let defaultSubwayLinesListLen;
 
 class Args {
     constructor(kmeans_k, opacity_multiply_factor, city_boundary, draw_offset, city_circle_r, city_circle_thickness,
@@ -7264,6 +7265,8 @@ class Args {
 
 const default_args = new Args();
 const visualizationContainer = document.getElementById('visualization-container');
+const in_date = document.getElementById('first');
+const out_date = document.getElementById('second');
 
 function setMouseOverText(svg, args, target, isLine=true, lineInfo= '线路名称： 起始站： 终点站： 站点数：') {
     // 设置线悬停时的效果和文字
@@ -7501,6 +7504,24 @@ function convertDateString(inputString) {
     return formattedDate;
 }
 
+function setVisiblility(line){
+    const inDate = new Date(in_date.textContent);
+    const outDate = new Date(out_date.textContent);
+
+    // 获取 'year_month_date' 属性值
+    const stringDate = line.getAttribute('start_date');
+    const lineDate = new Date(stringDate);
+
+    // 判断属性值是否在起始日期和终止日期之间
+    if ((inDate <= lineDate) && (lineDate <= outDate)) {
+        // 在范围内，设为可见
+        line.style.visibility = 'visible';
+    } else {
+        // 不在范围内，设为不可见
+        line.style.visibility = 'hidden';
+    }
+}
+
 function parseData(jsonData, svg, subcaptionId, args){
     // This function parses a city JSON file
 
@@ -7566,10 +7587,12 @@ function parseData(jsonData, svg, subcaptionId, args){
             }
             circle_intro = drawCircle((x1+x2)/2, (y1+y2)/2, (calculateRadius(x1, y1, x2, y2) - thickness/2), '#' + color, 'none', '0', '1', '0.5', false);
             circle_intro.setAttribute('start_date', convertDateString(start_date));
+            setVisiblility(circle_intro);
             subwayLinesList.push(circle_intro);
             svg.appendChild(circle_intro);
             circle_extro = drawCircle((x1+x2)/2, (y1+y2)/2, calculateRadius(x1, y1, x2, y2), 'none', '#' + color, thickness.toFixed(2) + 'px', '0.75', '0');
             circle_extro.setAttribute('start_date', convertDateString(start_date));
+            setVisiblility(circle_extro);
             subwayLinesList.push(circle_extro);
             svg.appendChild(circle_extro);
             setMouseOverText(svg, args, circle_extro, false, textinfo);
@@ -7588,6 +7611,7 @@ function parseData(jsonData, svg, subcaptionId, args){
             }
             line = drawLine(x1, y1, x2, y2, '#' + color, thickness.toFixed(2) + 'px', '0.75');
             line.setAttribute('start_date', convertDateString(start_date));
+            setVisiblility(line);
             subwayLinesList.push(line);
             svg.appendChild(line);
             setMouseOverText(svg, args, line, true, textinfo);
@@ -7662,6 +7686,10 @@ function init(default_args){
         initializeVCPair(default_args, visualizationId, filePaths, captionId, initialCaption, subcaptionId);
     }
 
+    setTimeout(function() {
+        defaultSubwayLinesListLen = subwayLinesList.length;
+    }, 200);
+
     // 点击某个城市后的触发事件
     const foregroundSvg = document.getElementById("foreground-svg");
     const overlay = document.getElementById('overlay');
@@ -7696,7 +7724,6 @@ function init(default_args){
             `;
 
             v_c_pair.classList.add('scaled-city');
-            // v_c_pair.classList.add('scaled');
             overlay.appendChild(v_c_pair);
 
             const args = new Args(default_args.kmeans_k);
@@ -7707,7 +7734,11 @@ function init(default_args){
 
     foregroundSvg.addEventListener('click', function() {
 
-        overlay.removeChild(overlay.querySelector('.v-c-pair-container'));
+        if (overlay.firstChild){
+            overlay.removeChild(overlay.firstChild);
+        }
+
+        subwayLinesList.splice(defaultSubwayLinesListLen);
 
         foregroundSvg.style.display = "none";
         overlay.classList.add('blur-out');
@@ -7795,13 +7826,10 @@ $(document).click(e => {
     }
 })
 
-const in_date = document.getElementById('first');
-const out_date = document.getElementById('second');
 
 // 创建一个 Mutation Observer 实例，传入一个回调函数
 const in_observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
-    console.log('Content changed:', mutation.target.textContent);
     const inDate = new Date(mutation.target.textContent);
     const outDate = new Date(out_date.textContent);
     for (const line of subwayLinesList) {
@@ -7823,7 +7851,6 @@ const in_observer = new MutationObserver((mutations) => {
 
 const out_observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
-    console.log('Content changed:', mutation.target.textContent);
     const inDate = new Date(in_date.textContent);
     const outDate = new Date(mutation.target.textContent);
     for (const line of subwayLinesList) {

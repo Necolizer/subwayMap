@@ -78,6 +78,8 @@
 .page-caption {
     text-align: center;
     font-size: 35px;
+    /* margin-top: 15px; */
+    margin-bottom: 15px;
     margin-left: auto;
     margin-right: auto;
     font-family: 'Noto Sans SC', sans-serif; /* Use Noto Sans Simplified Chinese */
@@ -92,14 +94,15 @@
     padding:1rem 1.5rem 1.2rem
 }
 
-.g-container {
-    position: relative;
-    width: 400px;
-    height: 300px;
+.config-container {
+    position: sticky;
+    top: 2%;
+    z-index: 1;
+    margin-top: -60px;
     overflow: hidden;
     transition: clip-path .3s linear;
     clip-path: circle(20px at 44px 44px);
-    background: #fff;
+    background: #ffffff00;
     
     &:hover {
         clip-path: circle(460px at 44px 44px);
