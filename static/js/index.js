@@ -11,13 +11,16 @@ const files = ['北京.json', '上海.json', '广州.json', '深圳.json', '成�
 '长沙.json', '青岛.json', '芜湖.json', '滁州.json', '绍兴.json', '金华.json', 
 '台州.json', '湘潭.json', '湘西.json', '南通.json', '澳门.json']
 
+const svgFolderPath = './static/svg/city';
+// const svgFiles = files.map(fileName => fileName.replace('.json', '.svg'));
+
 let subwayLinesList = [];
 let defaultSubwayLinesListLen;
 
 class Args {
     constructor(kmeans_k, opacity_multiply_factor, city_boundary, draw_offset, city_circle_r, city_circle_thickness,
         thickness_offset, thickness_weight, interchange_st_circle_r_weight, hover_text_fontsize, hover_text_offset,
-        hover_text_animation_len) {
+        hover_text_animation_len, city_background_scale, city_background_tranlateX, city_background_tranlateY) {
         
         //不可以scale的值
         this.kmeans_k = kmeans_k || 6;
@@ -34,6 +37,9 @@ class Args {
         this.hover_text_fontsize = hover_text_fontsize || 8;
         this.hover_text_offset = hover_text_offset || 8;
         this.hover_text_animation_len = hover_text_animation_len || 500/3;
+        this.city_background_scale = city_background_scale || 0.4;
+        this.city_background_tranlateX = city_background_tranlateX || 105;
+        this.city_background_tranlateY = city_background_tranlateY || 10;
     }
 
     scale(factor) {
@@ -47,6 +53,9 @@ class Args {
         this.hover_text_fontsize *= (factor * 0.8);
         this.hover_text_offset *= factor;
         this.hover_text_animation_len *= factor;
+        this.city_background_scale *= factor;
+        this.city_background_tranlateX /= factor;
+        this.city_background_tranlateY /= factor;
     }
 }
 
@@ -309,7 +318,7 @@ function setVisiblility(line){
     }
 }
 
-function parseData(jsonData, svg, subcaptionId, args){
+function parseData(jsonData, svg, subcaptionId, args, initialCaption){
     // This function parses a city JSON file
 
     const city_subway_name = jsonData.s;
@@ -319,6 +328,18 @@ function parseData(jsonData, svg, subcaptionId, args){
     const subcaption_text = "|" + city_subway_name + "[" + city_subway_id + "]";
     const subcaption = document.getElementById(subcaptionId);
     subcaption.innerHTML = `${subcaption_text}`;
+
+    const backgroundImage = document.createElementNS("http://www.w3.org/2000/svg", 'image');
+    backgroundImage.setAttribute('href', path.join(svgFolderPath, initialCaption+'.svg'));
+    backgroundImage.setAttribute('opacity', '0.5');
+    backgroundImage.classList.add('opacity-change');
+    backgroundImage.style.position = 'absolute';
+    backgroundImage.style.top = '0';
+    backgroundImage.style.left = '0';
+    backgroundImage.style.transform = `scale(${args.city_background_scale}, ${args.city_background_scale}) translate(-${args.city_background_tranlateX}%, -${args.city_background_tranlateY}%)`;
+    backgroundImage.style.pointerEvents = "none";
+    svg.appendChild(backgroundImage);
+
 
     // Draw the outside black circle
     city_circle = drawCircle(args.draw_offset, args.draw_offset, args.city_circle_r, '#E9D4C7', '#261E25', args.city_circle_thickness.toFixed(2) + 'px', '0.9', '0.6');
@@ -435,7 +456,7 @@ function initializeVCPair(args, visualizationId, filePaths, captionId, initialCa
         dataType: "json",
         success: 
         function (data) {
-            parseData(data, svg, subcaptionId, args)
+            parseData(data, svg, subcaptionId, args, initialCaption)
         }
     });
 
