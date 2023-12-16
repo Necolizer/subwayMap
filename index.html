@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1.0, minimum-scale=0.3">
     <title>中国城市地铁系统可视化</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zhi+Mang+Xing&display=swap" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" />
@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="./static/css/event.css">
     <link rel="stylesheet" href="./static/css/botton.css">
     <link rel="stylesheet" href="./static/css/slider.css">
+    <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
     <!-- <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css"> -->
     <!-- <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script> -->
@@ -22,22 +23,26 @@
     <script src='https://code.jquery.com/ui/1.12.0/jquery-ui.min.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/gsap/2.1.3/TweenMax.min.js'></script>
+    <script defer src="./static/js/fontawesome.all.min.js"></script>
 </head>
 
 <body>
 
 <!-- 前景 SVG -->
-<svg id="foreground-svg" class="svg-foreground" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="48" height="48">
-    <path d="m16.707,8.707l-3.293,3.293,3.293,3.293-1.414,1.414-3.293-3.293-3.293,3.293-1.414-1.414,3.293-3.293-3.293-3.293,1.414-1.414,3.293,3.293,3.293-3.293,1.414,1.414Zm7.293,3.293c0,6.617-5.383,12-12,12S0,18.617,0,12,5.383,0,12,0s12,5.383,12,12Zm-2,0c0-5.514-4.486-10-10-10S2,6.486,2,12s4.486,10,10,10,10-4.486,10-10Z"/>
-</svg>
+<div id="foreground-svg" class="svg-foreground">
+    <i class="fas fa-times-circle"></i>
+</div>
 
 <div class="config-container">
+    <div class='circle-svg'>
+        <i class="fas fa-clock"></i>
+    </div>
     <div class="box">
         <div class="values">
             <div><span id="first"></span></div> - <div><span id="second"></span></div>
         </div>
         <small>
-            间隔
+            相隔
             <div><span id="third"></span></div>
         </small>
 
@@ -67,7 +72,7 @@
         <select data-menu>
             <option>随机</option>
             <option selected>Kmeans++</option>
-            <option>最远点</option>
+            <option>最远</option>
         </select>
     </div>
 </div>

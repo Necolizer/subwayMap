@@ -7842,7 +7842,7 @@ $(document).on('click', '.select-menu > ul > li', function(e) {
         default_args.kmeans_k = parseInt(select.val(), 10);
     } 
     else if (selectMenuId == 'kmeans-init') {
-        if (select.val() == '最远点'){
+        if (select.val() == '最远'){
             default_args.kmeans_init = 'mostDistant';
         }else if (select.val() == '随机'){
             default_args.kmeans_init = 'random';

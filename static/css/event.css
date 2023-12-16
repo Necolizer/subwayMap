@@ -60,7 +60,7 @@
     position: fixed;
     top: 10%;
     left: 5%;
-    transform: translate(-50%, -50%);
+    transform: scale(2.5, 2.5) translate(-50%, -50%);
     z-index: 2;
     transition: opacity 0.15s ease;
 }

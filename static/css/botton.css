@@ -16,6 +16,177 @@
 }
 
 .select-menu {
+    /* --background: #242836;
+    --text: #fff;
+    --icon: #fff;
+    --icon-active: #3F4656;
+    --list: #1C212E;
+    --list-text: rgba(255, 255, 255, .2);
+    --list-text-hover: rgba(255, 255, 255, .5); */
+    --background: #f3f4f7;
+    --text: #000000;
+    --icon: #000000;
+    --icon-active: #d2d6e0;
+    --list: #f3f4f7e5;
+    --list-text: rgba(0, 0, 0, 0.5);
+    --list-text-hover: rgba(0, 0, 0, 0.8);
+    position: relative;
+    z-index: 1;
+    font-weight: 500;
+    font-size: 14px;
+    font-family: 'Noto Sans SC', sans-serif;
+    line-height: 25px;
+}
+.select-menu select,
+.select-menu .button {
+    font-family: inherit;
+    margin: 0;
+    border: 0;
+    text-align: left;
+    text-transform: none;
+    -webkit-appearance: none;
+}
+.select-menu select {
+    pointer-events: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+    opacity: 0;
+    padding: 8px 36px 8px 12px;
+    visibility: hidden;
+    font-weight: 500;
+    font-size: 14px;
+    font-family: 'Noto Sans SC', sans-serif;
+    line-height: 25px;
+}
+.select-menu ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    transform: translateY(var(--t));
+    transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+.select-menu ul li {
+    padding: 8px 36px 8px 12px;
+    cursor: pointer;
+}
+.select-menu > ul {
+    background: var(--list);
+    color: var(--list-text);
+    border-radius: 6px;
+}
+.select-menu > ul li {
+    transition: color 0.3s ease;
+}
+.select-menu > ul li:hover {
+    color: var(--list-text-hover);
+}
+.select-menu .button {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0;
+    z-index: 1;
+    width: 100%;
+    display: block;
+    overflow: hidden;
+    border-radius: 6px;
+    color: var(--text);
+    background: var(--background);
+}
+.select-menu .button em {
+    --r: 45deg;
+    display: block;
+    position: absolute;
+    right: 12px;
+    top: 0;
+    width: 7px;
+    height: 7px;
+    margin-top: 13px;
+    -webkit-backface-visibility: hidden;
+}
+.select-menu .button em:before, .select-menu .button em:after {
+    --o: .4;
+    content: "";
+    width: 7px;
+    height: 7px;
+    opacity: var(--o);
+    display: block;
+    position: relative;
+    transition: opacity 0.2s ease;
+    transform: rotate(var(--r)) scale(0.75);
+}
+.select-menu .button em:before {
+    border-left: 2px solid var(--icon);
+    border-top: 2px solid var(--icon);
+    top: 1px;
+}
+.select-menu .button em:after {
+    border-right: 2px solid var(--icon);
+    border-bottom: 2px solid var(--icon);
+    bottom: 1px;
+}
+.select-menu:not(.open) > ul {
+    opacity: 0;
+    pointer-events: none;
+}
+.select-menu.open.tilt-up {
+    -webkit-animation: tilt-up 0.4s linear forwards;
+            animation: tilt-up 0.4s linear forwards;
+}
+.select-menu.open.tilt-up .button em:before {
+    --o: 1;
+}
+.select-menu.open.tilt-down {
+    -webkit-animation: tilt-down 0.4s linear forwards;
+            animation: tilt-down 0.4s linear forwards;
+}
+.select-menu.open.tilt-down .button em:after {
+    --o: 1;
+}
+
+@-webkit-keyframes tilt-up {
+    40%, 60% {
+    transform: perspective(500px) rotateX(8deg);
+    }
+}
+
+@keyframes tilt-up {
+    40%, 60% {
+    transform: perspective(500px) rotateX(8deg);
+    }
+}
+@-webkit-keyframes tilt-down {
+    40%, 60% {
+    transform: perspective(500px) rotateX(-8deg);
+    }
+}
+@keyframes tilt-down {
+    40%, 60% {
+    transform: perspective(500px) rotateX(-8deg);
+    }
+}
+html {
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+}
+
+* {
+    box-sizing: inherit;
+}
+*:before, *:after {
+    box-sizing: inherit;
+}
+
+
+/* .select-menu {
     --background: #f3f4f7;
     --text: #000000;
     --icon: #000000;
@@ -163,4 +334,4 @@
     60% {
         transform: perspective(500px) rotateX(-8deg);
     }
-}
+} */

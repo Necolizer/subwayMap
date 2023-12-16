@@ -31,6 +31,8 @@
 
 .visualization.shadow {
     position: relative;
+    margin-left: auto;
+    margin-right: auto;
     width: 200px;
     height: 200px;
     transition: box-shadow 0.3s ease;
@@ -94,6 +96,21 @@
     padding:1rem 1.5rem 1.2rem
 }
 
+/* .config-container {
+    position: sticky;
+    top: 2%;
+    z-index: 1;
+    margin-top: -60px;
+    overflow: hidden;
+    transition: clip-path .3s linear;
+    clip-path: circle(20px at 52px 44px);
+    background: #ffffff00;
+    
+    &:hover {
+        clip-path: circle(460px at 52px 44px);
+    }
+} */
+
 .config-container {
     position: sticky;
     top: 2%;
@@ -101,10 +118,48 @@
     margin-top: -60px;
     overflow: hidden;
     transition: clip-path .3s linear;
-    clip-path: circle(20px at 44px 44px);
+    clip-path: circle(25px at 52px 44px);
     background: #ffffff00;
-    
-    &:hover {
-        clip-path: circle(460px at 44px 44px);
-    }
 }
+
+.config-container:hover {
+    clip-path: circle(460px at 52px 44px);
+}
+
+.circle-svg {
+    position: absolute;
+    top: 44px;
+    left: 52px;
+    transform: translate(-49%, -60%) scale(3.3, 3.3);
+    background-color: #fafafa;
+    transition: opacity .3s linear;
+    opacity: 1;
+    z-index: 2;
+}
+
+.config-container:hover .circle-svg {
+    opacity: 0;
+}
+
+
+/* Chrome, Safari, Edge, and Opera */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    background-color: transparent;
+}
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background-image: linear-gradient(135deg, #09f, #3c9);
+}
+
+/* Firefox */
+/* stylelint-disable selector-type-no-unknown */
+* {
+    scrollbar-color: #09f transparent;
+    scrollbar-width: thin;
+}
+/* stylelint-enable selector-type-no-unknown */
